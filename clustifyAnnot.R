@@ -10,35 +10,7 @@ xentro_markers <- read_excel("~/BINF/scrnaseq general/dorsal migration/ref/xentr
                                col_types = c("text", "text", "skip", 
                                                       "skip", "skip", "skip"))
 
-# Create a named list from marker table
-marker_list = split(xentro_markers$Marker_genes, xentro_markers$State)
 
-# Assume your Seurat object is named seurat_obj
-expr_mat <- GetAssayData(seurat_obj, slot = "data", assay = "RNA")
-cluster_ids <- Idents(seurat_obj)
-
-expr_mat = GetAssayData(dors, layer = "data", assay = "RNA")
-cluster_ids = Idents(dors)
-cluster_ids_fixed <- setNames(as.character(cluster_ids), names(cluster_ids))
-
-
-
-metadata_df <- data.frame(
-  cell_barcode = names(cluster_ids_fixed),
-  cluster = cluster_ids_fixed,
-  stringsAsFactors = FALSE
-)
-
-markerdf = as.data.frame(marker_list)
-marker_scores <- clustify_lists(
-  input = expr_mat,
-  metadata = metadata_df,
-  cluster_col = "cluster",     # name of the column in metadata
-  marker = markerdf
-)
-marker_scores = clustify_lists(input = expr_mat,
-                               cluster_col = cluster_ids,
-                               markers = marker_list)
 #####################
 
 
@@ -60,3 +32,43 @@ dors <- clustify_lists(
 )
 
 DimPlot(dors, group.by = "type") + ggtitle("Cell Type Annotations")
+
+######################################
+
+#annotate with the same reference, use different annotating software
+
+#devtools::install_github('XQ-hub/scAnnoX')
+#BiocManager::install('CHETAH')
+#BiocManager::install("CelliD")
+
+#install.packages("RcppEigen")
+#install.packages("Rcpp")
+#install.packages("ggsci")
+#install.packages("viridis")
+#install.packages("tidyverse")
+#devtools::install_github("PaulingLiu/scibet")
+#devtools::install_github("zwj-tina/scibetR")
+
+
+library(scAnnoX)
+
+marker_list = split(xentro_markers$Marker_genes, xentro_markers$State)
+
+# Run multiple annotation tools
+
+dors2 = autoAnnoTools(dors, 
+                     method = 'scCATCH',
+                     marker = marker_list,
+                     cluster_col = "seurat_clusters",
+                     strategy = 'marker-based'
+                     )
+
+DimPlot(dors2, group.by = "scCATCH", pt.size = 1,label = TRUE) + ggtitle("Cell Type Annotations, software: scCATCH") + NoLegend()
+
+
+##############
+
+#look for markers
+neuralCrest.markers = c("Foxd3", "Snail2", "Sox9","Zic5", "Tfap2a")
+FeaturePlot(dors, reduction = "umap", pt.size = 0.5,
+            features = neuralCrest.markers)
