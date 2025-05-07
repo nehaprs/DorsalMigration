@@ -1,4 +1,5 @@
 # DorsalMigration
 
 Species: _Xenopus Tropicalis
-Single cEll RNAseq_
+Single cell RNAseq_
+Tissue: Embryonic Head
