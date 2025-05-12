@@ -5,15 +5,17 @@ library(patchwork)
 library(writexl)
 library(readxl)
 library(clustree)
+library(hdf5r)
 
-setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
-
+#setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
+'
 s.data =  ReadMtx(mtx = "matrix.mtx.gz",
                   cells = "barcodes.tsv.gz",
                   features = "features.tsv.gz")
+' 
+s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/filtered_feature_bc_matrix.h5")
 
-
-setwd("~/BINF/scrnaseq general/dorsal migration/seurat")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
@@ -23,7 +25,7 @@ FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 ##check for empty droplets
 #BiocManager::install("DropletUtils")
 library(DropletUtils)
-raw <- Read10X("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/raw_feature_bc_matrix")
+raw <- Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/raw_feature_bc_matrix.h5")
 e.out <- emptyDrops(raw)
 # Keep barcodes with FDR < 0.01 and 0.05
 keep <- e.out$FDR < 0.05
