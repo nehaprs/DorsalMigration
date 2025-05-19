@@ -1,10 +1,11 @@
-BiocManager::install("clustifyr")
+#BiocManager::install("clustifyr")
 library(clustifyr)
 library(dplyr)
 library(Seurat)
 library(writexl)
 library(readxl)
 library(tibble)
+library(tidyr)
 dors = readRDS("dorsal.rds")
 xentro_markers <- read_excel("~/BINF/scrnaseq general/dorsal migration/ref/xentro_markers.xlsx", 
                                col_types = c("text", "text", "skip", 

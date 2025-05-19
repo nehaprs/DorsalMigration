@@ -20,6 +20,10 @@ dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
 vln = VlnPlot(dors, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+dors.low = subset(dors, subset = nFeature_RNA< 350)
+#3520 'cells' have nFeatures < 500
+#4 cells < 250
+#1018 < 350
 FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 
 ##check for empty droplets
@@ -50,8 +54,8 @@ heat = DimHeatmap(dors, dims = 1:20, cells = 500, balanced = TRUE)
 #pc 5 or 6, even that is a stretch though
 
 elbow = ElbowPlot(dors)
-#choose 6
-dors = FindNeighbors(dors, dims = 1:6)
+#choose 14
+dors = FindNeighbors(dors, dims = 1:14)
 
 
 resolution.range <- seq(from = 0, to = 1, by = 0.1)
@@ -87,10 +91,10 @@ for (file in xlsx_file){
 }
 
 dorsclust = clustree(dors)
-#choose 0.7
+#choose 0.5
 
-dors = RunUMAP(dors, dims = 1:6)
+dors = RunUMAP(dors, dims = 1:14)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.7", pt.size = 1) + ggtitle("UMAP Plot")
+        group.by = "RNA_snn_res.0.6", pt.size = 1) + ggtitle("UMAP Plot")
 
 saveRDS(dors,"dorsal.rds")
