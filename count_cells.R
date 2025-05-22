@@ -6,6 +6,8 @@ library(writexl)
 library(readxl)
 library(clustree)
 library(hdf5r)
+library(scCATCH)
+library(tidyr)
 
 #setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
 '
@@ -96,6 +98,112 @@ dorsclust = clustree(dors)
 
 dors = RunUMAP(dors, dims = 1:14)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.6", pt.size = 1) + ggtitle("UMAP Plot")
+        group.by = "RNA_snn_res.1", pt.size = 1) + ggtitle("UMAP Plot")
 
 saveRDS(dors,"dorsal.rds")
+
+##finding scCatch clusters
+dorsal <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/dorsal.rds")
+dors = dorsal
+
+xentro_markers <- read_excel("~/BINF/scrnaseq general/dorsal migration/ref/xentro_markers.xlsx", 
+                             col_types = c("text", "text", "skip", 
+                                           "skip", "skip", "skip"))
+
+library(scAnnoX)
+
+marker_list = split(xentro_markers$Marker_genes, xentro_markers$State)
+
+# Run multiple annotation tools
+
+dors2 = autoAnnoTools(dors, 
+                      method = 'scCATCH',
+                      marker = marker_list,
+                      cluster_col = "seurat_clusters",
+                      strategy = 'marker-based'
+)
+
+DimPlot(dors2, group.by = "scCATCH", pt.size = 1,label = TRUE) + ggtitle("Cell Type Annotations, software: scCATCH") + NoLegend()
+
+#we have scCatch clusters
+#try subdividing the clusters further
+
+#use 
+resolution.range <- seq(from = 1.1, to = 2, by = 0.1)
+
+# Loop over each resolution
+for (res in resolution.range) {
+  # Perform clustering with the current resolution
+  dors<- FindClusters(dors, resolution = res)
+  
+  # Find all markers for the clusters at this resolution
+  dors.markers <- FindAllMarkers(dors, only.pos = TRUE)
+  
+  # Define the file name for saving the markers
+  file_name <- paste0("markers_resolution_", res, ".xlsx")
+  
+  # Save the markers as an Excel file
+  write_xlsx(dors.markers, file_name)
+  
+  # Print a message to confirm completion for each resolution
+  print(paste("Markers for resolution", res, "saved to", file_name))
+}
+
+
+#list all xlsx files in wd
+
+xlsx_file = list.files(pattern = "\\.xlsx$")
+
+for (file in xlsx_file){
+  df = read_xlsx(file)
+  dff = df[df$avg_log2FC > 1,]
+  dfff = dff[dff$p_val_adj < 0.05,]
+  file_new = paste0("filt",file)
+  write_xlsx(dfff, file_new)
+}
+
+dorsclust = clustree(dors)
+
+table(dors$RNA_snn_res.2)
+DimPlot(dors, reduction = "umap", label = TRUE,
+        group.by = "RNA_snn_res.2", pt.size = 1) + ggtitle("UMAP Plot at resolution 2")
+
+dors2 = autoAnnoTools(dors, 
+                      method = 'scCATCH',
+                      marker = marker_list,
+                      cluster_col = "seurat_clusters",
+                      strategy = 'marker-based'
+)
+
+DimPlot(dors2, group.by = "scCATCH", repel = TRUE, pt.size = 1,label = TRUE,
+        max.overlaps = Inf) + 
+  ggtitle("Cell Type Annotations, software: scCATCH, res:2") + NoLegend()
+
+
+#print the scCatch annotations
+
+Idents(dors2)
+#res 2, non-annotated
+
+head(dors2$seurat_clusters)
+
+#Compute markers for every cluster
+
+markers = FindAllMarkers(object = dors2,
+                         only.pos = TRUE,
+                         return.thresh = 0.05) %>% as.data.frame()
+
+#per-cluster lookup table
+
+cluster_ann = dors2@meta.data %>%
+  as.data.frame() %>%
+  select(cluster = seurat_clusters,
+         cell_type = scCATCH) %>%
+  distinct()
+
+write_xlsx(cluster_ann,"scCatch_clusters.xlsx")
+
+mergedmarkers = left_join(markers, cluster_ann, by = "cluster")
+mergedmarkers = mergedmarkers[mergedmarkers$p_val_adj < 0.05,]
+write_xlsx(mergedmarkers,"scCatchmarkersNoScores.xlsx")
+saveRDS(dors2,"dorsal.rds")
