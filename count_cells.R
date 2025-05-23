@@ -129,7 +129,7 @@ DimPlot(dors2, group.by = "scCATCH", pt.size = 1,label = TRUE) + ggtitle("Cell T
 #try subdividing the clusters further
 
 #use 
-resolution.range <- seq(from = 1.1, to = 2, by = 0.1)
+resolution.range <- seq(from = 0, to = 2, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -175,8 +175,8 @@ dors2 = autoAnnoTools(dors,
                       strategy = 'marker-based'
 )
 
-DimPlot(dors2, group.by = "scCATCH", repel = TRUE, pt.size = 1,label = TRUE,
-        max.overlaps = Inf) + 
+DimPlot(dors2, group.by = "scCATCH", repel = TRUE, pt.size = 1,label = TRUE
+    ) + 
   ggtitle("Cell Type Annotations, software: scCATCH, res:2") + NoLegend()
 
 
@@ -207,3 +207,78 @@ mergedmarkers = left_join(markers, cluster_ann, by = "cluster")
 mergedmarkers = mergedmarkers[mergedmarkers$p_val_adj < 0.05,]
 write_xlsx(mergedmarkers,"scCatchmarkersNoScores.xlsx")
 saveRDS(dors2,"dorsal.rds")
+
+cluster_counts = as.data.frame(table(dors2$seurat_clusters))
+write_xlsx(cluster_counts,"cluster_counts.xlsx")
+
+##############
+##candidate clusters: 11, 12, 20
+
+#find differential markers in these clusters
+
+#cluster 20 v 11
+
+markers20 <- FindMarkers(
+  object         = seurat_obj,
+  ident.1        = 20,
+  only.pos       = TRUE,
+  min.pct        = 0.25,
+  logfc.threshold= 0.25
+)
+
+#genes enriched in each cluster
+markers11 = FindMarkers(dors2,
+                        ident.1 = 11,
+                        only.pos       = TRUE,
+                        return.thresh = 0.05)
+markers12 = FindMarkers(dors2,
+                        ident.1 = 12,
+                        only.pos       = TRUE,
+                        return.thresh = 0.05)
+
+markers20 = FindMarkers(dors2,
+                        ident.1 = 20,
+                        only.pos       = TRUE,
+                        return.thresh = 0.05)
+
+
+#Genes enriched in 20 but not in 11
+#genes enriched in 12 not 11
+in12not11genes = setdiff(rownames(markers12), rownames(markers11))
+#Subset the cluster-12 markers to just those
+
+in12not11 = markers12[in12not11genes, ,drop = FALSE] #drop FALSE prevents R from simplifying the result to a vector or matrix if we end up selecting only one column
+#Rank by log2 fold-change
+in12not11 = in12not11 %>% arrange(desc(avg_log2FC))
+in12not11 = in12not11[in12not11$p_val_adj < 0.05,]
+GeneName = rownames(in12not11)
+in12not11 = cbind( GeneName, in12not11)
+write_xlsx(in12not11,"enrichment/in12not11.xlsx")
+
+
+#genes enriched in 11 not 20
+in11not20genes = setdiff(rownames(markers11), rownames(markers20))
+#Subset the cluster-12 markers to just those
+
+in11not20 = markers11[in11not20genes, ,drop = FALSE] #drop FALSE prevents R from simplifying the result to a vector or matrix if we end up selecting only one column
+#Rank by log2 fold-change
+in11not20 = in11not20 %>% arrange(desc(avg_log2FC))
+in11not20 = in11not20[in11not20$p_val_adj < 0.05,]
+gene = rownames(in11not20)
+in11not20 = cbind( gene, in11not20)
+write_xlsx(in11not20,"enrichment/in11not20.xlsx")
+
+
+#genes enriched in 11 not 12
+in11not12genes = setdiff(rownames(markers11), rownames(markers12))
+#Subset the cluster-12 markers to just those
+
+in11not12 = markers11[in11not12genes, ,drop = FALSE] #drop FALSE prevents R from simplifying the result to a vector or matrix if we end up selecting only one column
+#Rank by log2 fold-change
+in11not12 = in11not12 %>% arrange(desc(avg_log2FC))
+in11not12 = in11not12[in11not12$p_val_adj < 0.05,]
+gene = rownames(in11not12)
+in11not12 = cbind( gene, in11not12)
+write_xlsx(in11not12,"enrichment/in11not12.xlsx")
+
+
