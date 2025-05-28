@@ -212,19 +212,12 @@ cluster_counts = as.data.frame(table(dors2$seurat_clusters))
 write_xlsx(cluster_counts,"cluster_counts.xlsx")
 
 ##############
-##candidate clusters: 11, 12, 20
+##candidate clusters: 11, 20, 20
 
 #find differential markers in these clusters
 
 #cluster 20 v 11
 
-markers20 <- FindMarkers(
-  object         = seurat_obj,
-  ident.1        = 20,
-  only.pos       = TRUE,
-  min.pct        = 0.25,
-  logfc.threshold= 0.25
-)
 
 #genes enriched in each cluster
 markers11 = FindMarkers(dors2,
@@ -281,3 +274,50 @@ gene = rownames(in11not12)
 in11not12 = cbind( gene, in11not12)
 write_xlsx(in11not12,"enrichment/in11not12.xlsx")
 
+#################
+
+#subclustering beyond 2
+
+#use 
+resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
+
+# Loop over each resolution
+for (res in resolution.range) {
+  # Perform clustering with the current resolution
+  dors<- FindClusters(dors, resolution = res)
+  
+  # Find all markers for the clusters at this resolution
+  dors.markers <- FindAllMarkers(dors, only.pos = TRUE)
+  
+  # Define the file name for saving the markers
+  file_name <- paste0("markers_resolution_", res, ".xlsx")
+  
+  # Save the markers as an Excel file
+  write_xlsx(dors.markers, file_name)
+  
+  # Print a message to confirm completion for each resolution
+  print(paste("Markers for resolution", res, "saved to", file_name))
+}
+
+
+#list all xlsx files in wd
+
+xlsx_file = list.files(pattern = "\\.xlsx$")
+
+for (file in xlsx_file){
+  df = read_xlsx(file)
+  dff = df[df$avg_log2FC > 1,]
+  dfff = dff[dff$p_val_adj < 0.05,]
+  file_new = paste0("filt",file)
+  write_xlsx(dfff, file_new)
+}
+
+dorsclust = clustree(dors)
+
+res3nos = as.data.frame(table(dors$RNA_snn_res.3))
+write_xlsx(res3nos,"cell_numberres3.xlsx")
+DimPlot(dors, reduction = "umap", label = TRUE,
+        group.by = "RNA_snn_res.3", pt.size = 1) + ggtitle("UMAP Plot at resolution 3")
+###
+
+#continued insubclustering.R
