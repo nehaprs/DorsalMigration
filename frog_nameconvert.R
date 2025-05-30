@@ -1,6 +1,6 @@
 frog_nameconvert = function(s.object){
   library(biomaRt)
-  
+  #convert gene ID to ensembl ID
   # Extract and clean gene IDs
   original_ids = rownames(s.object)
   cleaned_ids = gsub("^Xetrov", "", original_ids)

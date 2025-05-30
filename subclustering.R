@@ -79,3 +79,17 @@ saveRDS(nc_sub11,"nc_suball3.rds")
 #subcluster 3 of 20 looks very promising
 #subclustering of 20: res: 0.9
 
+nc_sub12 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/subcluster/cluster12/nc_sub12.rds")
+nc_sub11 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/subcluster/cluster11/nc_sub11.rds")
+nc_sub20 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/subcluster/cluster20/nc_sub20.rds")
+nc_suball3 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/subcluster/all3/nc_suball3.rds")
+
+nc_sublist = c(nc_sub12, nc_sub11,nc_sub20,nc_suball3)
+
+#convert from ensembl ids to gene names
+source("~/GitHub/DorsalMigration/frog_name_ensembl2symbol.R")
+nc_suball3 = frog_name_ensembl2symbol(nc_suball3)
+
+head(row.names(nc_suball3), n = 50)
+
+FeaturePlot(nc_suball3, features = "Zic2")
