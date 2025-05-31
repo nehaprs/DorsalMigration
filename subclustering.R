@@ -9,7 +9,8 @@ library(hdf5r)
 library(scCATCH)
 library(tidyr)
 
-Idents(dors2)
+Idents(dorsal)
+head(row.names(dorsal), n =50)
 # Subset to only clusters 11, 12, and 20
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/subcluster/all3")
 nc_sub11 = subset(dors2, idents= c("11","12","20"))
@@ -90,6 +91,56 @@ nc_sublist = c(nc_sub12, nc_sub11,nc_sub20,nc_suball3)
 source("~/GitHub/DorsalMigration/frog_name_ensembl2symbol.R")
 nc_suball3 = frog_name_ensembl2symbol(nc_suball3)
 
-head(row.names(nc_suball3), n = 50)
 
-FeaturePlot(nc_suball3, features = "Zic2")
+
+for (nc in nc_sublist) {
+  print(deparse(nc))
+  obj_name <- deparse(substitute(nc))
+  suffix   <- sub("^nc_sub", "", obj_name)}
+
+#plot absolute expression of the genes of interest
+
+nc = nc_suball3
+
+  obj_name <- deparse(substitute(nc_suball3))
+  suffix   <- sub("^nc_sub", "", obj_name)
+  
+  # 1) get the four feature plots as a list
+  fp_list <- FeaturePlot(
+    object    = nc,
+    features  = c("zic2","zic3","pax3","msx1"),
+    combine   = FALSE    # return a list instead of auto-combining
+  )
+  
+  # 2) wrap into a single patchwork and 3) add a title
+  p<- wrap_plots(fp_list, ncol = 2) +
+    plot_annotation(
+      title = paste0("Gene Expression Levels in Subcluster: ", suffix),
+      theme = theme(plot.title = element_text(hjust = 0.5))
+    )
+  
+  print(p)
+rm(nc)
+
+#get the number of cells in the subclusters
+
+
+print(table(Idents(nc_suball3)))
+
+#get the average expression level of each gene in each of the subclusters within
+#these clusters.
+## use the raw count so that they are comparable across different seurat objects
+
+
+genes = c("zic2","zic3","pax3","msx1")
+nc = nc_suball3
+
+
+avg_list = AggregateExpression(nc, features = genes,
+                             assays = "RNA",
+                             slot = "data", #for raw expression levels
+                             return.seurat = FALSE)
+
+print(avg_list)
+
+
