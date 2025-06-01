@@ -18,5 +18,74 @@ library(ggplot2)
 #marker genes:
 #1. From paired analysis gene significantly higher in cluster 20/12 than in cluster 11
 
-markers_xt = row.names(pairedmarkers20vs11)
+markers_xt = row.names(pairedmarkers12vs11)
 #set up biomart connection
+
+
+
+mart_xt = useEnsembl(biomart = "genes", dataset = "xtropicalis_gene_ensembl")
+
+
+## Map Xenopus tropicalis SYMBOLS → Xenopus Entrez IDs 
+
+
+
+bm_xt2hs = getBM(attributes = c("external_gene_name", "entrezgene_id"),
+                 filters = "external_gene_name",
+                 values = markers_xt,
+                 mart = mart_xt
+)
+                   
+# Extract unique, non-NA Xenopus Entrez IDs
+xtr_entrez <- unique(na.omit(bm_xt2hs$entrezgene_id))
+if (length(xtr_entrez) == 0) {
+  warning("None of the Xenopus SYMBOLS mapped to an Xt Entrez ID.")
+}   
+
+
+#============================================
+#KEGG pathway enrichment
+#============================================
+
+if (length(xtr_entrez) > 0) {
+  ekegg_xtr <- enrichKEGG(
+    gene         = xtr_entrez,
+    organism     = "xtr",           # KEGG code for Xenopus tropicalis
+    keyType      = "ncbi-geneid",   # our vector is Entrez IDs
+    pvalueCutoff = 0.05,
+    pAdjustMethod= "BH",
+    qvalueCutoff = 0.10
+  )}
+
+
+if (nrow(as.data.frame(ekegg_xtr)) == 0) {
+  message("No KEGG pathways passed the p-value/q-value thresholds for Xenopus tropicalis.")
+} else {
+  message("Top 10 KEGG pathways for X. tropicalis cluster-12 markers:")
+  print(head(ekegg_xtr, n = 10))
+  
+  # visualize top 10 KEGG pathways
+  barplot(
+    ekegg_xtr,
+    showCategory = 10,
+    title        = "KEGG Enrichment (X. tropicalis – paired markers 12vs11)"
+  )
+  
+  dotplot(
+    ekegg_xtr,
+    showCategory = 10,
+    title        = "KEGG Dotplot (X. tropicalis –paired markers 12vs11)"
+  )
+}
+
+
+#save output files
+
+if (exists("ekegg_xtr") && nrow(as.data.frame(ekegg_xtr)) > 0) {
+  kegg_xtr_df <- as.data.frame(ekegg_xtr)
+  write.csv(
+    kegg_xtr_df,
+    file = "pairedmarkers12vs11_KEGG_enrichment.csv",
+    row.names = FALSE
+  )
+}
