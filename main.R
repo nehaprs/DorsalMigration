@@ -1,4 +1,9 @@
-#update.packages("spatstat.utils")
+
+#============================================================
+#edits 6.9.2025: v2: without removing cells with < 500 features,
+#including cell cycle stages
+#============================================================
+
 library(dplyr)
 library(Seurat)
 library(patchwork)
