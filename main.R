@@ -1,7 +1,8 @@
 
 #============================================================
-#edits 6.9.2025: v2: without removing cells with < 500 features,
-#including cell cycle stages
+#edits 6.9.2025: v2: without removing cells with < 500 features, using <250 features instead.
+#including cell cycle stages: scaledata : variables to regress: cell cycle stages, nCounts
+#scaling with variable features instead of all genes
 #============================================================
 
 library(dplyr)
@@ -22,14 +23,16 @@ s.data =  ReadMtx(mtx = "matrix.mtx.gz",
 ' 
 s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/version2")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
 vln = VlnPlot(dors, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-dors.low = subset(dors, subset = nFeature_RNA< 350)
+dors.low = subset(dors, subset = nFeature_RNA< 250)
+
 #3520 'cells' have nFeatures < 500
 #4 cells < 250
+#94 cells < 300
 #1018 < 350
 FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 
@@ -44,28 +47,56 @@ sum(keep, na.rm=TRUE)
 #3573 real cells on FDR 0.01
 #3777 real cells on FDR 0.05
 
-#sox9 <- subset(sox9, subset = nFeature_RNA > 2000 & nFeature_RNA < 7000 & percent.mt < 5)
+dors2 <- subset(dors, subset = nFeature_RNA > 250 & nFeature_RNA < 6000 & percent.mt < 5)
+#10863 cells after nFeatures< 250
+dors = dors2
+rm(dors2)
 dors = NormalizeData(dors)
 
 dors = FindVariableFeatures(dors,selection.method = "vst" )
 
+#-----------------
+#cell cycle stages
+#-----------------
+
+# A list of HUMAN cell cycle markers, from Tirosh et al, 2015, is loaded with Seurat.  
+s.genes <- cc.genes$s.genes
+g2m.genes <- cc.genes$g2m.genes
+
+
+
+
+# Basic function to convert human to xentrop gene names
+
+source('~/GitHub/DorsalMigration/humanGeneName2XenTropNames.R')
+s.genes_xt = humanGeneName2XenTropNames(s.genes)
+g2m.genes_xt = humanGeneName2XenTropNames(g2m.genes)
+
+#calculate cell cycle phase score
+
+dors = CellCycleScoring(object = dors, s.features = s.genes_xt, g2m.features = g2m.genes_xt)
+dors$CC.Difference = dors$S.Score - dors$G2M.Score
+colnames(dors@meta.data)
+
+dors = ScaleData(dors, vars.to.regress = c("nCount_RNA", "CC.Difference"))
+
 top10 = head(VariableFeatures(dors),10)
 
 #scaling data
-all.genes = rownames(dors)
-dors = ScaleData(dors, features = all.genes)
+#all.genes = rownames(dors)
+#dors = ScaleData(dors, features = all.genes)
 
 #PCA
 dors = RunPCA(dors, features = VariableFeatures(object = dors))
-heat = DimHeatmap(dors, dims = 1:20, cells = 500, balanced = TRUE)
+heat = DimHeatmap(dors, dims = 1:20, cells = 2000, balanced = TRUE)
 #pc 5 or 6, even that is a stretch though
 
 elbow = ElbowPlot(dors)
-#choose 14
-dors = FindNeighbors(dors, dims = 1:14)
+#choose 7
+dors = FindNeighbors(dors, dims = 1:7)
 
 
-resolution.range <- seq(from = 0, to = 1, by = 0.1)
+resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -99,14 +130,17 @@ for (file in xlsx_file){
 }
 
 dorsclust = clustree(dors)
-#choose 0.5
+#choose 2, and move ahead for now
 
-dors = RunUMAP(dors, dims = 1:14)
+dors = RunUMAP(dors, dims = 1:7)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.1", pt.size = 1) + ggtitle("UMAP Plot")
+        group.by = "RNA_snn_res.3", pt.size = 1) + ggtitle("UMAP Plot, res:3")
 
 saveRDS(dors,"dorsal.rds")
-
+dors$seurat_clusters = dors$RNA_snn_res.2
+table(Idents(dors))
+Idents(dors) = dors$RNA_snn_res.2
+table(Idents(dors))
 ##finding scCatch clusters
 dorsal <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/dorsal.rds")
 dors = dorsal
@@ -171,7 +205,7 @@ dorsclust = clustree(dors)
 
 table(dors$RNA_snn_res.2)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.2", pt.size = 1) + ggtitle("UMAP Plot at resolution 2")
+        group.by = "RNA_snn_res.0.4", pt.size = 1) + ggtitle("UMAP Plot at resolution 0.4")
 
 dors2 = autoAnnoTools(dors, 
                       method = 'scCATCH',
