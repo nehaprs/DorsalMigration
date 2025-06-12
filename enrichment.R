@@ -17,8 +17,10 @@ library(ggplot2)
 
 #marker genes:
 #1. From paired analysis gene significantly higher in cluster 20/12 than in cluster 11
-
-markers_xt = row.names(pairedmarkers12vs11)
+#enrichment of cluster 7 markers
+makers <- read_excel("filtmarkers_resolution_0.7.xlsx")
+makers = makers[makers$cluster == 7, 7]
+markers_xt = makers
 #set up biomart connection
 
 
@@ -61,14 +63,14 @@ if (length(xtr_entrez) > 0) {
 if (nrow(as.data.frame(ekegg_xtr)) == 0) {
   message("No KEGG pathways passed the p-value/q-value thresholds for Xenopus tropicalis.")
 } else {
-  message("Top 10 KEGG pathways for X. tropicalis cluster-12 markers:")
+  message("Top 10 KEGG pathways for X. tropicalis cluster-7 markers:")
   print(head(ekegg_xtr, n = 10))
   
   # visualize top 10 KEGG pathways
   barplot(
     ekegg_xtr,
     showCategory = 10,
-    title        = "KEGG Enrichment (X. tropicalis – paired markers 12vs11)"
+    title        = "KEGG Enrichment (X. tropicalis –cluster7 markers )"
   )
   
   dotplot(
@@ -85,7 +87,7 @@ if (exists("ekegg_xtr") && nrow(as.data.frame(ekegg_xtr)) > 0) {
   kegg_xtr_df <- as.data.frame(ekegg_xtr)
   write.csv(
     kegg_xtr_df,
-    file = "pairedmarkers12vs11_KEGG_enrichment.csv",
+    file = "markerssubcluster7_KEGG_enrichment.csv",
     row.names = FALSE
   )
 }

@@ -130,17 +130,19 @@ for (file in xlsx_file){
 }
 
 dorsclust = clustree(dors)
-#choose 2, and move ahead for now
+
 
 dors = RunUMAP(dors, dims = 1:7)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.3", pt.size = 1) + ggtitle("UMAP Plot, res:3")
+        group.by = "RNA_snn_res.0.6", pt.size = 1) + ggtitle("UMAP Plot, res:0.6")
+#choose res 0.5 for subclustering
 
 saveRDS(dors,"dorsal.rds")
-dors$seurat_clusters = dors$RNA_snn_res.2
+dors$seurat_clusters = dors$RNA_snn_res.0.5
 table(Idents(dors))
-Idents(dors) = dors$RNA_snn_res.2
+Idents(dors) = dors$RNA_snn_res.0.5
 table(Idents(dors))
+#in res5, cluster 3 is neural crest
 ##finding scCatch clusters
 dorsal <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/dorsal.rds")
 dors = dorsal
@@ -360,3 +362,4 @@ DimPlot(dors, reduction = "umap", label = TRUE,
 ###
 
 #continued insubclustering.R
+#subclustering for version2: res0.5, cluster3: in nc_clusters/subclusterv2.R
