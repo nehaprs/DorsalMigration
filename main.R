@@ -3,6 +3,12 @@
 #edits 6.9.2025: v2: without removing cells with < 500 features, using <250 features instead.
 #including cell cycle stages: scaledata : variables to regress: cell cycle stages, nCounts
 #scaling with variable features instead of all genes
+#Commit named v2
+
+
+#edits 6.12.2025: v2:  removing cells with < 500 features.
+#including cell cycle stages: scaledata : variables to regress: cell cycle stages, nCounts
+#scaling with variable features instead of all genes
 #============================================================
 
 library(dplyr)
@@ -16,19 +22,15 @@ library(scCATCH)
 library(tidyr)
 
 #setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
-'
-s.data =  ReadMtx(mtx = "matrix.mtx.gz",
-                  cells = "barcodes.tsv.gz",
-                  features = "features.tsv.gz")
-' 
+
 s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/version2")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/version3")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
 vln = VlnPlot(dors, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-dors.low = subset(dors, subset = nFeature_RNA< 250)
+dors.low = subset(dors, subset = nFeature_RNA< 500)
 
 #3520 'cells' have nFeatures < 500
 #4 cells < 250
@@ -92,11 +94,11 @@ heat = DimHeatmap(dors, dims = 1:20, cells = 2000, balanced = TRUE)
 #pc 5 or 6, even that is a stretch though
 
 elbow = ElbowPlot(dors)
-#choose 7
-dors = FindNeighbors(dors, dims = 1:7)
+#choose 8
+dors = FindNeighbors(dors, dims = 1:8)
 
 
-resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
+resolution.range <- seq(from = 0, to = 2, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -123,7 +125,7 @@ xlsx_file = list.files(pattern = "\\.xlsx$")
 
 for (file in xlsx_file){
   df = read_xlsx(file)
-  dff = df[df$avg_log2FC > 1,]
+  dff = df[df$avg_log2FC > 0,]
   dfff = dff[dff$p_val_adj < 0.05,]
   file_new = paste0("filt",file)
   write_xlsx(dfff, file_new)
@@ -132,9 +134,9 @@ for (file in xlsx_file){
 dorsclust = clustree(dors)
 
 
-dors = RunUMAP(dors, dims = 1:7)
+dors = RunUMAP(dors, dims = 1:8)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.6", pt.size = 1) + ggtitle("UMAP Plot, res:0.6")
+        group.by = "RNA_snn_res.1.5", pt.size = 1) + ggtitle("UMAP Plot, res:1.5")
 #choose res 0.5 for subclustering
 
 saveRDS(dors,"dorsal.rds")
