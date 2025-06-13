@@ -139,11 +139,12 @@ DimPlot(dors, reduction = "umap", label = TRUE,
         group.by = "RNA_snn_res.1.5", pt.size = 1) + ggtitle("UMAP Plot, res:1.5")
 #choose res 0.5 for subclustering
 
+
+dors$seurat_clusters = dors$RNA_snn_res.0.9
+table(Idents(dors))
+Idents(dors) = dors$RNA_snn_res.0.9
+table(Idents(dors))
 saveRDS(dors,"dorsal.rds")
-dors$seurat_clusters = dors$RNA_snn_res.0.5
-table(Idents(dors))
-Idents(dors) = dors$RNA_snn_res.0.5
-table(Idents(dors))
 #in res5, cluster 3 is neural crest
 ##finding scCatch clusters
 dorsal <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/dorsal.rds")
@@ -362,6 +363,5 @@ write_xlsx(res3nos,"cell_numberres3.xlsx")
 DimPlot(dors, reduction = "umap", label = TRUE,
         group.by = "RNA_snn_res.3", pt.size = 1) + ggtitle("UMAP Plot at resolution 3")
 ###
-
 #continued insubclustering.R
 #subclustering for version2: res0.5, cluster3: in nc_clusters/subclusterv2.R

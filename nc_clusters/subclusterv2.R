@@ -2,6 +2,9 @@
 '
 subclustering for v2: that is, 6000 < features <250, cell cycle regressed
 nc subcluster: res 0.5, cluster 3
+
+subclustering for v3: that is, 6000 < features < 500. cell cycle regressed
+nc subcluster: res 0.9, clusters 0,4,14
 '
 #==========================================================================
 
@@ -14,11 +17,11 @@ library(clustree)
 library(scCATCH)
 library(tidyr)
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/version2/subcluster")
-dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/version2/dorsal.rds")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/version3/subcluster")
+dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/version3/dorsal.rds")
 table(Idents(dors))
 
-nc_sub = subset(dors, idents = 3)
+nc_sub = subset(dors, idents = c(0,4,14))
 rm(dors)
 
 nc_sub[["percent.mt"]] <- PercentageFeatureSet(nc_sub, pattern = "^MT-")
@@ -101,16 +104,17 @@ for (file in xlsx_file){
 nc_subclust = clustree(nc_sub)
 
 #res 0.7 or 0.8
-Idents(nc_sub) = nc_sub$RNA_snn_res.0.7
-nc_sub$seurat_clusters = nc_sub$RNA_snn_res.0.7
+#v3: start with res 0.5
+Idents(nc_sub) = nc_sub$RNA_snn_res.0.5
+nc_sub$seurat_clusters = nc_sub$RNA_snn_res.0.5
 
 nc_sub = RunUMAP(nc_sub, dims = 1:6)
 DimPlot(nc_sub, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.4", pt.size = 1) + ggtitle("UMAP Plot subclustered NC cluster, res:0.4")
+        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot subclustered NC cluster, res:0.5")
 
 #diff b/w res 0.6 and 0.7 is some cells shuffled between clusters 7 and 8
 #use res 0.7
-
+saveRDS(nc_sub, "nc_sub.rds")
 
 genes = c("zic2","zic3","pax3","msx1","cdh1","cdh2",
           "foxd3", "sox10", "snai2", "snai1", "tfap2a","twist1")
@@ -119,9 +123,11 @@ avg_list = AggregateExpression(nc_sub, features = genes,
                                assays = "RNA",
                                slot = "data", #for raw expression levels
                                return.seurat = FALSE)
+avg_list$genes = rownames(as.data.frame(avg_list))
 write_xlsx(as.data.frame(avg_list),"aggregateExpression.xlsx")
-FeaturePlot(nc_sub, features = genes2)
-rownames(as.data.frame(avg_list))
+FeaturePlot(nc_sub, features = genes)
+
+
 
 genes2 = c("nr4a1",
            "nr4a2",
