@@ -19,7 +19,7 @@ library(ggplot2)
 #1. From paired analysis gene significantly higher in cluster 20/12 than in cluster 11
 #enrichment of cluster 7 markers
 makers <- read_excel("filtmarkers_resolution_0.7.xlsx")
-makers = makers[makers$cluster == 7, 7]
+makers = makers[makers$cluster == 0, 7]
 markers_xt = makers
 #set up biomart connection
 
@@ -87,7 +87,7 @@ if (exists("ekegg_xtr") && nrow(as.data.frame(ekegg_xtr)) > 0) {
   kegg_xtr_df <- as.data.frame(ekegg_xtr)
   write.csv(
     kegg_xtr_df,
-    file = "markerssubcluster7_KEGG_enrichment.csv",
+    file = "markerssubcluster0_KEGG_enrichment.csv",
     row.names = FALSE
   )
 }
