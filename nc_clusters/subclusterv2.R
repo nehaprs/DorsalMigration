@@ -17,7 +17,7 @@ library(clustree)
 library(scCATCH)
 library(tidyr)
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/version2/subcluster")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/version2/subcluster/round2")
 dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/version2/dorsal.rds")
 table(Idents(dors))
 dors$seurat_clusters = dors$RNA_snn_res.0.5
@@ -114,14 +114,14 @@ for (file in xlsx_file){
 #nc_sub.markers <- FindAllMarkers(nc_sub, only.pos = TRUE)
 nc_subclust = clustree(nc_sub)
 
-#res 0.7 or 0.8
+#res 0.7 or 0.6
 #v3: start with res 0.5
 Idents(nc_sub) = nc_sub$RNA_snn_res.0.7
 nc_sub$seurat_clusters = nc_sub$RNA_snn_res.0.7
 
 nc_sub = RunUMAP(nc_sub, dims = 1:6)
 DimPlot(nc_sub, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.7", pt.size = 1) + ggtitle("UMAP Plot subclustered NC cluster, res:0.7")
+        group.by = "RNA_snn_res.0.6", pt.size = 1) + ggtitle("UMAP Plot subclustered NC cluster, res:0.6")
 
 #diff b/w res 0.6 and 0.7 is some cells shuffled between clusters 7 and 8
 #use res 0.7
