@@ -9,6 +9,8 @@
 #edits 6.12.2025: v2:  removing cells with < 500 features.
 #including cell cycle stages: scaledata : variables to regress: cell cycle stages, nCounts
 #scaling with variable features instead of all genes
+
+#edit 6.26.2025: further study v2. find smaller clusters of nc cluster so that we can find the DM NC
 #============================================================
 
 library(dplyr)
@@ -98,7 +100,7 @@ elbow = ElbowPlot(dors)
 dors = FindNeighbors(dors, dims = 1:8)
 
 
-resolution.range <- seq(from = 0, to = 2, by = 0.1)
+resolution.range <- seq(from = 2, to = 4, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -136,7 +138,7 @@ dorsclust = clustree(dors)
 
 dors = RunUMAP(dors, dims = 1:8)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot, res:0.5")
+        group.by = "RNA_snn_res.1.9", pt.size = 1) + ggtitle("UMAP Plot, res:1.9")
 #choose res 0.5 for subclustering
 
 
@@ -200,7 +202,7 @@ xlsx_file = list.files(pattern = "\\.xlsx$")
 
 for (file in xlsx_file){
   df = read_xlsx(file)
-  dff = df[df$avg_log2FC > 1,]
+  dff = df[df$avg_log2FC > 0,]
   dfff = dff[dff$p_val_adj < 0.05,]
   file_new = paste0("filt",file)
   write_xlsx(dfff, file_new)
@@ -210,7 +212,19 @@ dorsclust = clustree(dors)
 
 table(dors$RNA_snn_res.2)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.4", pt.size = 1) + ggtitle("UMAP Plot at resolution 0.4")
+        group.by = "RNA_snn_res.3.6", pt.size = 1) + ggtitle("UMAP Plot at resolution 3.6")
+
+
+#number of cells in each cluster at desired res
+dors$seurat_clusters = dors$RNA_snn_res.2.4
+table(Idents(dors))
+Idents(dors) = dors$RNA_snn_res.2.4
+table(Idents(dors))
+
+
+
+ncol(dors)
+
 
 dors2 = autoAnnoTools(dors, 
                       method = 'scCATCH',
