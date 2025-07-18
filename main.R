@@ -11,6 +11,9 @@
 #scaling with variable features instead of all genes
 
 #edit 6.26.2025: further study v2. find smaller clusters of nc cluster so that we can find the DM NC
+
+#edit4: 7.17.2025: V4 what kind of filtering will bring back wnt-enriched dorsl nc cells?. 
+#only nFeatures< 6000. No cell cycles
 #============================================================
 
 library(dplyr)
@@ -27,8 +30,9 @@ library(tidyr)
 
 s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/version3")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/version4")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
+ncol(dors) #10882 cells without filtering
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
 vln = VlnPlot(dors, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
@@ -51,8 +55,14 @@ sum(keep, na.rm=TRUE)
 #3573 real cells on FDR 0.01
 #3777 real cells on FDR 0.05
 
-dors2 <- subset(dors, subset = nFeature_RNA > 250 & nFeature_RNA < 6000 & percent.mt < 5)
-#10863 cells after nFeatures< 250
+#dors2 <- subset(dors, subset = nFeature_RNA > 220 & nFeature_RNA < 6000 & percent.mt < 5)
+dors2 <- subset(dors, subset =  nFeature_RNA < 6000 & percent.mt < 5)
+ncol(dors2)
+#10869 cells after nFeature_RNA < 6000: working with this on edit 4
+#10881 cells after Feature_RNA > 220 & nFeature_RNA < 7000
+#10875 cells after nFeature_RNA > 250 & nFeature_RNA < 7000
+#10863 cells after nFeatures > 250 & nFeature_RNA < 6000
+#10881 cells after Feature_RNA > 100 & nFeature_RNA < 7000
 dors = dors2
 rm(dors2)
 dors = NormalizeData(dors)
@@ -82,8 +92,8 @@ dors = CellCycleScoring(object = dors, s.features = s.genes_xt, g2m.features = g
 dors$CC.Difference = dors$S.Score - dors$G2M.Score
 colnames(dors@meta.data)
 
-dors = ScaleData(dors, vars.to.regress = c("nCount_RNA", "CC.Difference"))
-
+#dors = ScaleData(dors, vars.to.regress = c("nCount_RNA", "CC.Difference"))
+dors = ScaleData(dors)
 top10 = head(VariableFeatures(dors),10)
 
 #scaling data
@@ -97,10 +107,10 @@ heat = DimHeatmap(dors, dims = 1:20, cells = 2000, balanced = TRUE)
 
 elbow = ElbowPlot(dors)
 #choose 8
-dors = FindNeighbors(dors, dims = 1:8)
+dors = FindNeighbors(dors, dims = 1:14)
 
 
-resolution.range <- seq(from = 2, to = 4, by = 0.1)
+resolution.range <- seq(from = 0, to = 3, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -136,9 +146,9 @@ for (file in xlsx_file){
 dorsclust = clustree(dors)
 
 
-dors = RunUMAP(dors, dims = 1:8)
+dors = RunUMAP(dors, dims = 1:14)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.1.9", pt.size = 1) + ggtitle("UMAP Plot, res:1.9")
+        group.by = "RNA_snn_res.2.2", pt.size = 1) + ggtitle("UMAP Plot, res:2.2")
 #choose res 0.5 for subclustering
 
 
@@ -148,6 +158,21 @@ Idents(dors) = dors$RNA_snn_res.0.9
 table(Idents(dors))
 saveRDS(dors,"dorsal.rds")
 #in res5, cluster 3 is neural crest
+
+
+
+#find marker genes from excel sheets for each resolution
+
+source("~/GitHub/DorsalMigration/functions/clusters_and_markers.R")
+clusters_and_markers("filt_markers")
+
+source("~/GitHub/DorsalMigration/functions/clean_nc_clusters.R")
+
+clean_nc_clusters("filt_markers/results/nc_Candidates.xlsx")
+
+
+
+
 ##finding scCatch clusters
 dorsal <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/dorsal.rds")
 dors = dorsal
