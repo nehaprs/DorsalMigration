@@ -30,7 +30,7 @@ library(tidyr)
 
 s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/version4")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/version4/CCScoring")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 ncol(dors) #10882 cells without filtering
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
@@ -92,8 +92,8 @@ dors = CellCycleScoring(object = dors, s.features = s.genes_xt, g2m.features = g
 dors$CC.Difference = dors$S.Score - dors$G2M.Score
 colnames(dors@meta.data)
 
-#dors = ScaleData(dors, vars.to.regress = c("nCount_RNA", "CC.Difference"))
-dors = ScaleData(dors)
+dors = ScaleData(dors, vars.to.regress = c("nCount_RNA", "CC.Difference"))
+#dors = ScaleData(dors)
 top10 = head(VariableFeatures(dors),10)
 
 #scaling data
@@ -150,13 +150,13 @@ dors = RunUMAP(dors, dims = 1:14)
 DimPlot(dors, reduction = "umap", label = TRUE,
         group.by = "RNA_snn_res.2.2", pt.size = 1) + ggtitle("UMAP Plot, res:2.2")
 #choose res 0.5 for subclustering
-
+saveRDS(dors,"dorsal.rds")
 
 dors$seurat_clusters = dors$RNA_snn_res.0.9
 table(Idents(dors))
 Idents(dors) = dors$RNA_snn_res.0.9
 table(Idents(dors))
-saveRDS(dors,"dorsal.rds")
+
 #in res5, cluster 3 is neural crest
 
 

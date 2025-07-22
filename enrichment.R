@@ -29,6 +29,14 @@ markers_xt = makers
 
 
 
+
+
+makers <- read_excel("~/BINF/scrnaseq general/dorsal migration/full head/version4/CCScoring/filt_markers/filtmarkers_resolution_2.1.xlsx")
+#makers = filtfiltmarkers_resolution_0_5
+makers_all = makers[makers$cluster == 22,]
+makers = makers[makers$cluster == 22,7]
+markers_xt = makers
+
 mart_xt = useEnsembl(biomart = "genes", dataset = "xtropicalis_gene_ensembl")
 
 
@@ -67,20 +75,20 @@ if (length(xtr_entrez) > 0) {
 if (nrow(as.data.frame(ekegg_xtr)) == 0) {
   message("No KEGG pathways passed the p-value/q-value thresholds for Xenopus tropicalis.")
 } else {
-  message("Top 10 KEGG pathways for X. tropicalis cluster-7 markers:")
+  message("Top 10 KEGG pathways for X. tropicalis cluster-20 markers:")
   print(head(ekegg_xtr, n = 10))
   
   # visualize top 10 KEGG pathways
   barplot(
     ekegg_xtr,
     showCategory = 10,
-    title        = "KEGG Enrichment (X. tropicalis –cluster7 markers )"
+    title        = "KEGG Enrichment (X. tropicalis –cluster 25 markers )"
   )
   
   dotplot(
     ekegg_xtr,
     showCategory = 10,
-    title        = "KEGG Dotplot (X. tropicalis –res 2.4 cluster 35)"
+    title        = "KEGG Dotplot (X. tropicalis –res 2 cluster 25)"
   )
 }
 
@@ -116,7 +124,7 @@ kegg_collapsed <- kegg_genes_with_symbols %>%
     .groups = "drop"
   )
 
-write_xlsx(kegg_collapsed,"kegg_res2.4cl35.xlsx")
+write_xlsx(kegg_collapsed,"kegg_res2.1cl22.xlsx")
 
 
 
@@ -218,7 +226,7 @@ conversion <- conversion %>%
   distinct(ensembl_gene_id, .keep_all = TRUE)
 # Merge to get Ensembl IDs in order
 gene_list <- gene_list[names(gene_list) %in% conversion$external_gene_name]
-names(gene_list) <- converted$ensembl_gene_id[match(names(gene_list), converted$external_gene_name)]
+names(gene_list) <- conversion$ensembl_gene_id[match(names(gene_list), conversion$external_gene_name)]
 head(gene_list)
 '
 

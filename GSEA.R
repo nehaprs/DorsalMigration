@@ -10,6 +10,16 @@ library(enrichplot)
 # STEP 1: Prepare biomart mapping
 xtrop <- useMart("ensembl", dataset = "xtropicalis_gene_ensembl")
 
+makers <- read_excel("~/BINF/scrnaseq general/dorsal migration/full head/version4/CCScoring/filt_markers/filtmarkers_resolution_2.1.xlsx")
+#makers = filtfiltmarkers_resolution_0_5
+makers_all = makers[makers$cluster == 22,]
+makers = makers[makers$cluster == 22,7]
+markers_xt = makers
+
+
+
+
+
 markers = makers_all
 #which(makers_all == "wnt1")
 gene_list <- markers %>%
@@ -122,4 +132,4 @@ go_results <- go_results %>%
       unlist()
   )
 
-write_xlsx(go_results,"gsea_gores2.4cl35.xlsx")
+write_xlsx(go_results,"gsea_gores2cl25.xlsx")
