@@ -148,7 +148,7 @@ dorsclust = clustree(dors)
 
 dors = RunUMAP(dors, dims = 1:14)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.2.2", pt.size = 1) + ggtitle("UMAP Plot, res:2.2")
+        group.by = "RNA_snn_res.1.6", pt.size = 1) + ggtitle("UMAP Plot, res:1.6")
 #choose res 0.5 for subclustering
 saveRDS(dors,"dorsal.rds")
 
