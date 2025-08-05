@@ -1,4 +1,4 @@
-Sys.setenv(OPENAI_API_KEY = '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')
+
 
 library(GPTCelltype)
 library(openai)
