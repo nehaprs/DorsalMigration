@@ -16,7 +16,7 @@ rownames(sce)         # gene names in format Xetrov
 assay(sce, "counts") <- assay(sce, "X")
 
 sce <- logNormCounts(sce)
-s.ref = as.Seurat(sce)
+ref = as.Seurat(sce)
 
 
 'library(SeuratDisk)
@@ -24,3 +24,7 @@ s.ref = as.Seurat(sce)
 Convert("~/BINF/scrnaseq general/dorsal migration/ref/sparsed_s18ref.h5ad", dest = "h5seurat", overwrite = TRUE)
 s.ref <- LoadH5Seurat("dataset.h5seurat")
 '
+
+
+
+
