@@ -14,6 +14,8 @@
 
 #edit4: 7.17.2025: V4 what kind of filtering will bring back wnt-enriched dorsl nc cells?. 
 #only nFeatures< 6000. No cell cycles
+
+#edit5: 9.10.2025: do with more cells as siri suggested
 #============================================================
 
 library(dplyr)
@@ -28,11 +30,11 @@ library(tidyr)
 
 #setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
 
-s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/filtered_feature_bc_matrix.h5")
+s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/st17force cells40k/CR-output/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/version4/CCScoring")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/st17force cells40k/seurat_output")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
-ncol(dors) #10882 cells without filtering
+ncol(dors) #40,000 cells without filtering
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
 vln = VlnPlot(dors, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
@@ -54,10 +56,16 @@ keep <- e.out$FDR < 0.05
 sum(keep, na.rm=TRUE)
 #3573 real cells on FDR 0.01
 #3777 real cells on FDR 0.05
+#not doing empty droplet filtering. if i do, only 123653 real cells
 
 #dors2 <- subset(dors, subset = nFeature_RNA > 220 & nFeature_RNA < 6000 & percent.mt < 5)
-dors2 <- subset(dors, subset =  nFeature_RNA < 6000 & percent.mt < 5)
+dors2 <- subset(dors, subset =   nFeature_RNA < 6000 & percent.mt < 5)
+#no lower limit coz the briggs revision paper by the french group finds low cell number, their filteration is at 100. all our cells are above 100
 ncol(dors2)
+
+FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+#only 8857 cells have nFeatures > 500
+#39987 cells after filtering for 6k.
 #10869 cells after nFeature_RNA < 6000: working with this on edit 4
 #10881 cells after Feature_RNA > 220 & nFeature_RNA < 7000
 #10875 cells after nFeature_RNA > 250 & nFeature_RNA < 7000
@@ -98,16 +106,16 @@ top10 = head(VariableFeatures(dors),10)
 
 #scaling data
 #all.genes = rownames(dors)
-#dors = ScaleData(dors, features = all.genes)
+dors = ScaleData(dors)
 
 #PCA
 dors = RunPCA(dors, features = VariableFeatures(object = dors))
-heat = DimHeatmap(dors, dims = 1:20, cells = 2000, balanced = TRUE)
+heat = DimHeatmap(dors, dims = 1:20,  balanced = TRUE)
 #pc 5 or 6, even that is a stretch though
 
 elbow = ElbowPlot(dors)
-#choose 8
-dors = FindNeighbors(dors, dims = 1:14)
+#choose 10
+dors = FindNeighbors(dors, dims = 1:10)
 
 
 resolution.range <- seq(from = 0, to = 3, by = 0.1)
@@ -146,11 +154,17 @@ for (file in xlsx_file){
 dorsclust = clustree(dors)
 
 
-dors = RunUMAP(dors, dims = 1:14)
+dors = RunUMAP(dors, dims = 1:10)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.1.6", pt.size = 1) + ggtitle("UMAP Plot, res:1.6")
+        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot, res:0.5")
+#redo after properly analyzing clusters based onmarkers
 #choose res 0.5 for subclustering
-saveRDS(dors,"dorsal.rds")
+saveRDS(dors,"dorsals17.rds")
+#find optimal cluster using function clusters_and_markers.R
+clusters_and_markers(folder = "filt_markers")
+clean_nc_clusters("filt_markers/nc_candidates.xlsx")
+
+
 
 dors$seurat_clusters = dors$RNA_snn_res.0.9
 table(Idents(dors))
