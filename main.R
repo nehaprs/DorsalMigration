@@ -16,6 +16,7 @@
 #only nFeatures< 6000. No cell cycles
 
 #edit5: 9.10.2025: do with more cells as siri suggested
+#stage 19,21
 #============================================================
 
 library(dplyr)
@@ -30,15 +31,15 @@ library(tidyr)
 
 #setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
 
-s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/st17force cells40k/CR-output/filtered_feature_bc_matrix.h5")
+s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/st24-force-cells-100k/CR-output/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/st17force cells40k/seurat_output")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/st24-force-cells-100k/seurat_output")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 ncol(dors) #40,000 cells without filtering
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
 
 vln = VlnPlot(dors, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-dors.low = subset(dors, subset = nFeature_RNA< 500)
+#dors.low = subset(dors, subset = nFeature_RNA< 500)
 
 #3520 'cells' have nFeatures < 500
 #4 cells < 250
@@ -48,6 +49,7 @@ FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 
 ##check for empty droplets
 #BiocManager::install("DropletUtils")
+'
 library(DropletUtils)
 raw <- Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/CR-output/raw_feature_bc_matrix.h5")
 e.out <- emptyDrops(raw)
@@ -58,8 +60,10 @@ sum(keep, na.rm=TRUE)
 #3777 real cells on FDR 0.05
 #not doing empty droplet filtering. if i do, only 123653 real cells
 
+'
+
 #dors2 <- subset(dors, subset = nFeature_RNA > 220 & nFeature_RNA < 6000 & percent.mt < 5)
-dors2 <- subset(dors, subset =   nFeature_RNA < 6000 & percent.mt < 5)
+dors2 <- subset(dors, subset =   nFeature_RNA < 4000 & percent.mt < 5)
 #no lower limit coz the briggs revision paper by the french group finds low cell number, their filteration is at 100. all our cells are above 100
 ncol(dors2)
 
@@ -80,7 +84,7 @@ dors = FindVariableFeatures(dors,selection.method = "vst" )
 #-----------------
 #cell cycle stages
 #-----------------
-
+'
 # A list of HUMAN cell cycle markers, from Tirosh et al, 2015, is loaded with Seurat.  
 s.genes <- cc.genes$s.genes
 g2m.genes <- cc.genes$g2m.genes
@@ -90,7 +94,7 @@ g2m.genes <- cc.genes$g2m.genes
 
 # Basic function to convert human to xentrop gene names
 
-source('~/GitHub/DorsalMigration/humanGeneName2XenTropNames.R')
+#source("~/GitHub/DorsalMigration/humanGeneName2XenTropNames.R")
 s.genes_xt = humanGeneName2XenTropNames(s.genes)
 g2m.genes_xt = humanGeneName2XenTropNames(g2m.genes)
 
@@ -104,18 +108,21 @@ dors = ScaleData(dors, vars.to.regress = c("nCount_RNA", "CC.Difference"))
 #dors = ScaleData(dors)
 top10 = head(VariableFeatures(dors),10)
 
+
+'
+
 #scaling data
 #all.genes = rownames(dors)
 dors = ScaleData(dors)
 
 #PCA
 dors = RunPCA(dors, features = VariableFeatures(object = dors))
-heat = DimHeatmap(dors, dims = 1:20,  balanced = TRUE)
+#heat = DimHeatmap(dors, dims = 1:20,  balanced = TRUE)
 #pc 5 or 6, even that is a stretch though
 
 elbow = ElbowPlot(dors)
 #choose 10
-dors = FindNeighbors(dors, dims = 1:10)
+dors = FindNeighbors(dors, dims = 1:11)
 
 
 resolution.range <- seq(from = 0, to = 3, by = 0.1)
@@ -154,21 +161,21 @@ for (file in xlsx_file){
 dorsclust = clustree(dors)
 
 
-dors = RunUMAP(dors, dims = 1:10)
+dors = RunUMAP(dors, dims = 1:11)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot, res:0.5")
+        group.by = "RNA_snn_res.2", pt.size = 1) + ggtitle("UMAP Plot, res:2")
 #redo after properly analyzing clusters based onmarkers
 #choose res 0.5 for subclustering
-saveRDS(dors,"dorsals17.rds")
+saveRDS(dors,"dorsals24.rds")
 #find optimal cluster using function clusters_and_markers.R
 clusters_and_markers(folder = "filt_markers")
 clean_nc_clusters("filt_markers/nc_candidates.xlsx")
 
 
 
-dors$seurat_clusters = dors$RNA_snn_res.0.9
+dors$seurat_clusters = dors$RNA_snn_res.0.5
 table(Idents(dors))
-Idents(dors) = dors$RNA_snn_res.0.9
+Idents(dors) = dors$RNA_snn_res.0.5
 table(Idents(dors))
 
 #in res5, cluster 3 is neural crest
@@ -182,7 +189,7 @@ clusters_and_markers("filt_markers")
 
 source("~/GitHub/DorsalMigration/functions/clean_nc_clusters.R")
 
-clean_nc_clusters("filt_markers/results/nc_Candidates.xlsx")
+clean_nc_clusters("filt_markers/nc_Candidates.xlsx")
 
 
 
@@ -418,3 +425,53 @@ DimPlot(dors, reduction = "umap", label = TRUE,
 ###
 #continued insubclustering.R
 #subclustering for version2: res0.5, cluster3: in nc_clusters/subclusterv2.R
+
+
+################
+#high res for stage 21
+################
+
+dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/st21/seurat_output/dorsals21.rds")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/st21/seurat_output/high_res")
+
+#use 
+resolution.range <- seq(from = 3.1, to = 4.5, by = 0.1)
+
+# Loop over each resolution
+for (res in resolution.range) {
+  # Perform clustering with the current resolution
+  dors<- FindClusters(dors, resolution = res)
+  
+  # Find all markers for the clusters at this resolution
+  dors.markers <- FindAllMarkers(dors, only.pos = TRUE)
+  
+  # Define the file name for saving the markers
+  file_name <- paste0("markers_resolution_", res, ".xlsx")
+  
+  # Save the markers as an Excel file
+  write_xlsx(dors.markers, file_name)
+  
+  # Print a message to confirm completion for each resolution
+  print(paste("Markers for resolution", res, "saved to", file_name))
+}
+
+
+#list all xlsx files in wd
+
+xlsx_file = list.files(pattern = "\\.xlsx$")
+
+for (file in xlsx_file){
+  df = read_xlsx(file)
+  dff = df[df$avg_log2FC > 1,]
+  dfff = dff[dff$p_val_adj < 0.05,]
+  file_new = paste0("filt",file)
+  write_xlsx(dfff, file_new)
+}
+
+source("~/GitHub/DorsalMigration/functions/clusters_and_markers.R")
+clusters_and_markers("filt_markers")
+
+source("~/GitHub/DorsalMigration/functions/clean_nc_clusters.R")
+
+clean_nc_clusters("filt_markers/nc_Candidates.xlsx")
+
