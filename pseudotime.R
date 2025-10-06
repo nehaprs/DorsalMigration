@@ -73,10 +73,27 @@ table(I2$orig.ident)
 cn <- Cells(I2)
 last_char <- substring(cn, nchar(cn), nchar(cn))
 table(last_char)  # should show counts for 1,2,3,4 only
-topifnot(all(last_char %in% c("1","2","3","4")))  # fail early if not true
+#topifnot(all(last_char %in% c("1","2","3","4")))  # fail early if not true
+
 
 
 I2$batch = last_char
 
 
-DimPlot(I2, group.by = "batch", reduction = "umap")
+########################################
+##try first without harmony
+########################################
+
+DefaultAssay(I2) #gives RNA. If not set RNA
+
+I2 = NormalizeData(I2)
+I2 = FindVariableFeatures(I2, nfeatures = 3000)
+I2 = ScaleData(I2)
+I2 = RunPCA(I2, npcs = 30)
+
+elbow = ElbowPlot(I2) #choose 6 pcs
+I2 = FindNeighbors(I2, dims = 1:6)
+I2 = RunUMAP(I2, dims = 1:6)
+I2 = FindClusters(I2)
+
+DimPlot(I2, group.by = "batch")
