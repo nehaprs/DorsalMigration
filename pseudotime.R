@@ -5,8 +5,7 @@
 #10.2.2025: quantify batch effect correction if we need to do harmony.
 
 #=================================================
-
-
+#devtools::install_github("immunogenomics/lisi")
 library(dplyr)
 library(Seurat)
 library(patchwork)
@@ -16,6 +15,7 @@ library(clustree)
 library(hdf5r)
 library(scCATCH)
 library(tidyr)
+library(harmony)
 
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/merged")
 #load seurat objects
@@ -97,3 +97,26 @@ I2 = RunUMAP(I2, dims = 1:6)
 I2 = FindClusters(I2)
 
 DimPlot(I2, group.by = "batch")
+
+############################
+library(lisi)
+emb <- Embeddings(I2, "pca")[,1:30]
+lisi <- compute_lisi(emb, I2@meta.data, "batch")
+mean_iLISI <- mean(lisi$iLISI, na.rm=TRUE)
+mean_iLISI
+
+#########################
+#with harmony
+##########################
+
+DefaultAssay(I2) #gives RNA. If not set RNA
+
+I2 = NormalizeData(I2)
+I2 = FindVariableFeatures(I2, nfeatures = 3000)
+I2 = ScaleData(I2)
+I2 = RunPCA(I2, npcs = 30)
+''
+I2 = RunHarmony(I2, group.by.vars = "batch", reduction = "pca", dims.use=1:30, assay.use="RNA")
+I2 = FindNeighbors(I2, reduction = "harmony", dims = 1:30)
+I2 = FindClusters(I2)
+I2 = RunUMAP(I2, reduction = "harmony", dims = 1:30)
