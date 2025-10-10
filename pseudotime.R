@@ -14,7 +14,7 @@ library(readxl)
 library(clustree)
 library(hdf5r)
 library(scCATCH)
-library(tidyr)
+library(tidyr)  
 library(harmony)
 
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/merged")
@@ -70,6 +70,7 @@ rm(seu_list)
 
 table(I2$orig.ident)
 
+#identify the batches
 cn <- Cells(I2)
 last_char <- substring(cn, nchar(cn), nchar(cn))
 table(last_char)  # should show counts for 1,2,3,4 only
@@ -84,7 +85,7 @@ I2$batch = last_char
 ##try first without harmony
 ########################################
 
-DefaultAssay(I2) #gives RNA. If not set RNA
+DefaultAssay(I2) = "RNA" #gives RNA. If not set RNA
 
 I2 = NormalizeData(I2)
 I2 = FindVariableFeatures(I2, nfeatures = 3000)
@@ -115,8 +116,40 @@ I2 = NormalizeData(I2)
 I2 = FindVariableFeatures(I2, nfeatures = 3000)
 I2 = ScaleData(I2)
 I2 = RunPCA(I2, npcs = 30)
+saveRDS(I2,"IntegrHarm.rds")
+
 ''
-I2 = RunHarmony(I2, group.by.vars = "batch", reduction = "pca", dims.use=1:30, assay.use="RNA")
+#I2 = RunHarmony(I2, group.by.vars = "batch", reduction = "pca", dims.use=1:30)
+I2 = RunHarmony(I2, group.by.vars = "batch")
 I2 = FindNeighbors(I2, reduction = "harmony", dims = 1:30)
 I2 = FindClusters(I2)
 I2 = RunUMAP(I2, reduction = "harmony", dims = 1:30)
+saveRDS(I2, "IntegrHarmd.rds")
+DimPlot(I2, group.by = "batch")
+
+#quantify batch effect
+
+library(lisi)
+emb <- Embeddings(I2, "pca")[,1:30]
+lisi <- compute_lisi(emb, I2@meta.data, "batch")
+mean_iLISI <- mean(lisi$iLISI, na.rm=TRUE)
+mean_iLISI
+
+remotes::install_github("theislab/kBET")
+library(kBET)
+set.seed(1)
+knn <- 30
+kb <- kBET(emb, batch=I2$batch, k=knn, plot=FALSE)
+kBET_accept <- 1 - kb$summary$kBET.observed # acceptance rate
+kBET_accept
+
+nn <- I2@graphs$RNA_snn
+batch_vec <- I2$batch
+same_batch_frac <- sapply(1:nrow(nn), \(i){
+  nbrs <- which(nn[i,] > 0)
+  if (length(nbrs)==0) return(NA_real_)
+  mean(batch_vec[nbrs] == batch_vec[i])
+})
+mean_same_batch <- mean(same_batch_frac, na.rm=TRUE)
+mean_same_batch
+#0.5324645
