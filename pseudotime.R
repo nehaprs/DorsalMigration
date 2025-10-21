@@ -1,9 +1,14 @@
 #=================================================
 #created 10.1.2025
+
+#in this r file, we run different types of integration and choose which integration should be used for pseudotime analysis.
+
+#Part 1: integration
 #DM NCC Pseudotime starting with stage 17 dm ncc
 #10.1.2025: integrated the 4 datasets. with merge here, integratedata() in biomix
 #10.2.2025: quantify batch effect correction if we need to do harmony.
 
+#Part 2: pseudotime Started 10.16.2025
 #=================================================
 #devtools::install_github("immunogenomics/lisi")
 library(dplyr)
@@ -59,7 +64,7 @@ seu_list <- lapply(seu_list, \(x) RunPCA(x, features = features))
 #saveRDS(I1, "integrated.R")
 
 #do merge
-
+head(Cells(I2))
 I2=  merge(seu_list[[1]], c(seu_list[[2]], seu_list[[3]], seu_list[[4]]))
 saveRDS(I2,"mergedDM.rds")
 
@@ -98,7 +103,7 @@ I2 = RunUMAP(I2, dims = 1:6)
 I2 = FindClusters(I2)
 
 DimPlot(I2, group.by = "batch")
-
+saveRDS(I2,"mergNoHarm.rds")
 ############################
 library(lisi)
 emb <- Embeddings(I2, "pca")[,1:30]
@@ -153,3 +158,15 @@ same_batch_frac <- sapply(1:nrow(nn), \(i){
 mean_same_batch <- mean(same_batch_frac, na.rm=TRUE)
 mean_same_batch
 #0.5324645
+
+
+
+
+##############################
+#Part 2: pseudotime
+##############################
+
+#on merge without harmony
+I2 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/merged/mergNoHarm.rds")
+
+
