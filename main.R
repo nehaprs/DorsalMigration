@@ -475,3 +475,7 @@ source("~/GitHub/DorsalMigration/functions/clean_nc_clusters.R")
 
 clean_nc_clusters("filt_markers/nc_Candidates.xlsx")
 
+source("~/GitHub/DorsalMigration/functions/count_nc_clusters.R")
+make_input_counted("nc_Candidates_reshaped.xlsx")
+
+clustree(dors)
