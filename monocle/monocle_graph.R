@@ -15,17 +15,21 @@ closest <- as.matrix(closest[colnames(desc_cds), , drop = FALSE])
 vmap <- setNames(if (is.numeric(closest[,1])) vn[closest[,1]] else as.character(closest[,1]),
                  rownames(closest))
 
-## 1) Root at S1_10
-root_cells <- colnames(desc_cds)[tolower(colData(desc_cds)$orig_cluster) == "s17_10"]
+## 1) Root at S95_4
+root_cells <- colnames(desc_cds)[tolower(colData(desc_cds)$orig_cluster) == "s95_4"]
 stopifnot(length(root_cells) > 0)
 root_v <- names(sort(table(vmap[root_cells]), decreasing = TRUE))[1]
 
 ## 2) Target leaves
 #get the list of leaves from lin_flow.png
-#target_leaves <- c("Y_1","Y_43","Y_5")
-target_leaves <- c("Y_105","Y_1038","Y_1062","Y_1083","Y_1092",
-                   "Y_1101", "Y_1109", "Y_113","Y_1135","Y_1137",
-                   "Y_1149") #only a few leaves here, since we'll be running on smaller cluster anyway
+#
+target_leaves <- c("Y_121","Y_134","Y_19","Y_194","Y_195",
+                   "Y_25", "Y_257", "Y_262","Y_276","Y_304",
+                   "Y_328","Y_334","Y_380","Y_45","Y_515","Y_524",
+                   "Y_525", "Y_531", "Y_578","Y_583",
+                   "Y_6","Y_93","Y_95") 
+
+#target_leaves <- c("Y_121","Y_194")
 target_leaves <- target_leaves[target_leaves %in% vn]
 stopifnot(length(target_leaves) > 0)
 
@@ -110,9 +114,9 @@ vertex_cluster_tbl_top5 <- tibble(
 #download vertex_cluster_tbl_top5 and manually select the earliest clusters.
 #because code is fucked.
 
-write_xlsx(vertex_cluster_tbl_top5,"vertex_cluster_tbl_top5.xlsx")
+#write_xlsx(vertex_cluster_tbl_top5,"vertex_cluster_tbl_top5.xlsx")
 
-node_df1 <- read_excel("vertex_cluster_tbl_top5_v2.xlsx")
+node_df1 <- read_excel("vertex_cluster_tbl_top5.xlsx")
 
 role = node_df[,-3]
 #node_df2 = inner_join(node_df1, role, by = c("vertex" = "name"))
@@ -131,7 +135,7 @@ lay <- create_layout(tg, layout = "sugiyama")
 
 ggraph(lay) +
   geom_edge_link(aes(colour = leaf),
-                 arrow = arrow(type = "open", length = unit(3, "mm")),
+                 arrow = arrow(type = "open", length = unit(5, "mm")),
                  show.legend = TRUE) +
   geom_node_label(aes(label = ifelse(!is.na(cluster), cluster, name),
                       fill = role),
