@@ -1,4 +1,4 @@
-
+#main script for dorsal migration
 #============================================================
 #edits 6.9.2025: v2: without removing cells with < 500 features, using <250 features instead.
 #including cell cycle stages: scaledata : variables to regress: cell cycle stages, nCounts
@@ -17,6 +17,9 @@
 
 #edit5: 9.10.2025: do with more cells as siri suggested
 #stage 19,21
+
+#edit6: high umi subsets
+#edit7: 12.2.2025: high umi, high resolution
 #============================================================
 
 library(dplyr)
@@ -31,9 +34,9 @@ library(tidyr)
 
 #setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
 
-s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/st24-force-cells-100k/CR-output/filtered_feature_bc_matrix.h5")
+s.data = Read10X_h5("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage24/filtered_feature_bc_matrix.h5")
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/st24-force-cells-100k/seurat_output")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage24/seurat_output")
 dors = CreateSeuratObject(counts = s.data, project = "dorsal migration")
 ncol(dors) #40,000 cells without filtering
 dors[["percent.mt"]] <- PercentageFeatureSet(dors, pattern = "^MT-")
@@ -63,9 +66,9 @@ sum(keep, na.rm=TRUE)
 '
 
 #dors2 <- subset(dors, subset = nFeature_RNA > 220 & nFeature_RNA < 6000 & percent.mt < 5)
-dors2 <- subset(dors, subset =   nFeature_RNA < 4000 & percent.mt < 5)
+dors <- subset(dors, subset =   nFeature_RNA < 4000 & percent.mt < 5)
 #no lower limit coz the briggs revision paper by the french group finds low cell number, their filteration is at 100. all our cells are above 100
-ncol(dors2)
+
 
 FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 #only 8857 cells have nFeatures > 500
@@ -75,8 +78,7 @@ FeatureScatter(dors, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 #10875 cells after nFeature_RNA > 250 & nFeature_RNA < 7000
 #10863 cells after nFeatures > 250 & nFeature_RNA < 6000
 #10881 cells after Feature_RNA > 100 & nFeature_RNA < 7000
-dors = dors2
-rm(dors2)
+
 dors = NormalizeData(dors)
 
 dors = FindVariableFeatures(dors,selection.method = "vst" )
@@ -122,11 +124,11 @@ dors = RunPCA(dors, features = VariableFeatures(object = dors))
 
 elbow = ElbowPlot(dors)
 #choose 10
-dors = FindNeighbors(dors, dims = 1:11)
+dors = FindNeighbors(dors, dims = 1:12)
 
 
-resolution.range <- seq(from = 0, to = 3, by = 0.1)
-
+resolution.range <- seq(from = 3.1, to = 4, by = 0.1)
+#resolution.range = 2.4
 # Loop over each resolution
 for (res in resolution.range) {
   # Perform clustering with the current resolution
@@ -149,7 +151,7 @@ for (res in resolution.range) {
 #list all xlsx files in wd
 
 xlsx_file = list.files(pattern = "\\.xlsx$")
-
+xlsx_file = "markers_resolution_2.4.xlsx"
 for (file in xlsx_file){
   df = read_xlsx(file)
   dff = df[df$avg_log2FC > 0,]
@@ -161,35 +163,34 @@ for (file in xlsx_file){
 dorsclust = clustree(dors)
 
 
-dors = RunUMAP(dors, dims = 1:11)
+dors = RunUMAP(dors, dims = 1:12)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.2", pt.size = 1) + ggtitle("UMAP Plot, res:2")
+        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot, res:0.5")
 #redo after properly analyzing clusters based onmarkers
 #choose res 0.5 for subclustering
-saveRDS(dors,"dorsals24.rds")
-#find optimal cluster using function clusters_and_markers.R
-clusters_and_markers(folder = "filt_markers")
-clean_nc_clusters("filt_markers/nc_candidates.xlsx")
-
 
 
 dors$seurat_clusters = dors$RNA_snn_res.0.5
 table(Idents(dors))
 Idents(dors) = dors$RNA_snn_res.0.5
 table(Idents(dors))
+saveRDS(dors,"dorsals24.rds")
+
 
 #in res5, cluster 3 is neural crest
 
-
-
-#find marker genes from excel sheets for each resolution
-
+#find optimal cluster using function clusters_and_markers.R
 source("~/GitHub/DorsalMigration/functions/clusters_and_markers.R")
 clusters_and_markers("filt_markers")
 
 source("~/GitHub/DorsalMigration/functions/clean_nc_clusters.R")
 
 clean_nc_clusters("filt_markers/nc_Candidates.xlsx")
+
+source("~/GitHub/DorsalMigration/functions/count_nc_clusters.R")
+make_input_counted("nc_Candidates_reshaped.xlsx")
+
+#find marker genes from excel sheets for each resolution
 
 
 
@@ -222,7 +223,7 @@ DimPlot(dors2, group.by = "scCATCH", pt.size = 1,label = TRUE) + ggtitle("Cell T
 
 #use 
 resolution.range <- seq(from = 0, to = 2, by = 0.1)
-
+resolution.range = 3
 # Loop over each resolution
 for (res in resolution.range) {
   # Perform clustering with the current resolution
@@ -245,7 +246,7 @@ for (res in resolution.range) {
 #list all xlsx files in wd
 
 xlsx_file = list.files(pattern = "\\.xlsx$")
-
+xlsx_file = "markers_resolution_3.xlsx"
 for (file in xlsx_file){
   df = read_xlsx(file)
   dff = df[df$avg_log2FC > 0,]
@@ -258,15 +259,17 @@ dorsclust = clustree(dors)
 
 table(dors$RNA_snn_res.2)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.3.6", pt.size = 1) + ggtitle("UMAP Plot at resolution 3.6")
+        group.by = "RNA_snn_res.3", pt.size = 1) + ggtitle("UMAP Plot at resolution 3")
 
 
-#number of cells in each cluster at desired res
+
+########################
+#count the number of cells in each cluster
+##########################
 dors$seurat_clusters = dors$RNA_snn_res.2.4
 table(Idents(dors))
 Idents(dors) = dors$RNA_snn_res.2.4
 table(Idents(dors))
-
 
 
 ncol(dors)
