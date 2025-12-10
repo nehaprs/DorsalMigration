@@ -1,6 +1,7 @@
 ###################
 ##DOWNSTREAM ANALYSIS
 # 10.29.2025: further subclustering of stage 19
+# 12.8.2025: stage 21: count umi of dm ncc
 ###################
 
 library(dplyr)
@@ -14,7 +15,7 @@ library(tidyr)
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/st19/seurat output/more_cluster")
 dors <- readRDS("C:/Users/neha/Documents/BINF/scrnaseq general/dorsal migration/full head/st19/seurat output/dorsals19.rds")
 
-resolution.range <- seq(from = 3.1, to = 5, by = 0.1)
+resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -46,3 +47,30 @@ for (file in xlsx_file){
   file_new = paste0("filt",file)
   write_xlsx(dfff, file_new)
 }
+
+
+#####################
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/st21/seurat_output")
+
+dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/st21/seurat_output/dorsals21.rds")
+
+dors$seurat_clusters = dors$RNA_snn_res.2.4
+table(Idents(dors))
+Idents(dors) = dors$RNA_snn_res.2.4
+table(Idents(dors))
+
+#count UMI
+
+UMI_cluster27 = subset(dors, idents = 27)$nCount_RNA
+summary(UMI_cluster27)
+
+library(ggplot2)
+
+df <- data.frame(UMI_cluster27)
+
+ggplot(df, aes(x = UMI_cluster27)) +
+  geom_histogram(bins = 100) +
+  labs(x = "UMI count (nCount_RNA)", y = "Number of cells")
+
+nrow(df) #2186 total
+sum(df$UMI_cluster27 < 501) #218 cells lost in umi filtering

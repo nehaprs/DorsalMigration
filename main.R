@@ -127,7 +127,7 @@ elbow = ElbowPlot(dors)
 dors = FindNeighbors(dors, dims = 1:12)
 
 
-resolution.range <- seq(from = 3.1, to = 4, by = 0.1)
+resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
 #resolution.range = 2.4
 # Loop over each resolution
 for (res in resolution.range) {
@@ -151,7 +151,7 @@ for (res in resolution.range) {
 #list all xlsx files in wd
 
 xlsx_file = list.files(pattern = "\\.xlsx$")
-xlsx_file = "markers_resolution_2.4.xlsx"
+#xlsx_file = "markers_resolution_2.4.xlsx"
 for (file in xlsx_file){
   df = read_xlsx(file)
   dff = df[df$avg_log2FC > 0,]
@@ -174,7 +174,7 @@ dors$seurat_clusters = dors$RNA_snn_res.0.5
 table(Idents(dors))
 Idents(dors) = dors$RNA_snn_res.0.5
 table(Idents(dors))
-saveRDS(dors,"dorsals24.rds")
+saveRDS(dors,"dorsals24-2.rds")
 
 
 #in res5, cluster 3 is neural crest
@@ -259,7 +259,7 @@ dorsclust = clustree(dors)
 
 table(dors$RNA_snn_res.2)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.3", pt.size = 1) + ggtitle("UMAP Plot at resolution 3")
+        group.by = "RNA_snn_res.2.6", pt.size = 1) + ggtitle("UMAP Plot at resolution 2.6")
 
 
 
@@ -313,7 +313,7 @@ write_xlsx(cluster_ann,"scCatch_clusters.xlsx")
 mergedmarkers = left_join(markers, cluster_ann, by = "cluster")
 mergedmarkers = mergedmarkers[mergedmarkers$p_val_adj < 0.05,]
 write_xlsx(mergedmarkers,"scCatchmarkersNoScores.xlsx")
-saveRDS(dors2,"dorsal.rds")
+saveRDS(dors,"dorsal.rds")
 
 cluster_counts = as.data.frame(table(dors2$seurat_clusters))
 write_xlsx(cluster_counts,"cluster_counts.xlsx")
