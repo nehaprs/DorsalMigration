@@ -20,6 +20,8 @@
 
 #edit6: high umi subsets
 #edit7: 12.2.2025: high umi, high resolution
+
+#edit8: 12.10.2025: automatic annotation
 #============================================================
 
 library(dplyr)
@@ -31,6 +33,7 @@ library(clustree)
 library(hdf5r)
 library(scCATCH)
 library(tidyr)
+library(scAnnoX)
 
 #setwd("~/BINF/scrnaseq general/dorsal migration/CR_count/outs/filtered_feature_bc_matrix")
 
@@ -127,7 +130,7 @@ elbow = ElbowPlot(dors)
 dors = FindNeighbors(dors, dims = 1:12)
 
 
-resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
+resolution.range <- seq(from = 3.1, to = 5, by = 0.1)
 #resolution.range = 2.4
 # Loop over each resolution
 for (res in resolution.range) {
@@ -165,16 +168,16 @@ dorsclust = clustree(dors)
 
 dors = RunUMAP(dors, dims = 1:12)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot, res:0.5")
-#redo after properly analyzing clusters based onmarkers
+        group.by = "RNA_snn_res.4.1", pt.size = 1) + ggtitle("UMAP Plot, res:4.1")
+#redo after properly analyzing clusters based on markers
 #choose res 0.5 for subclustering
 
 
-dors$seurat_clusters = dors$RNA_snn_res.0.5
+dors$seurat_clusters = dors$RNA_snn_res.1.5
 table(Idents(dors))
-Idents(dors) = dors$RNA_snn_res.0.5
+Idents(dors) = dors$RNA_snn_res.1.5
 table(Idents(dors))
-saveRDS(dors,"dorsals24-2.rds")
+saveRDS(dors,"merged17-19_highres.rds")
 
 
 #in res5, cluster 3 is neural crest
@@ -199,6 +202,12 @@ make_input_counted("nc_Candidates_reshaped.xlsx")
 dorsal <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/dorsal.rds")
 dors = dorsal
 
+dors$seurat_clusters = dors$RNA_snn_res.4
+table(Idents(dors))
+Idents(dors) = dors$RNA_snn_res.4
+table(Idents(dors))
+
+
 xentro_markers <- read_excel("~/BINF/scrnaseq general/dorsal migration/ref/xentro_markers.xlsx", 
                              col_types = c("text", "text", "skip", 
                                            "skip", "skip", "skip"))
@@ -216,9 +225,18 @@ dors2 = autoAnnoTools(dors,
                       strategy = 'marker-based'
 )
 
-DimPlot(dors2, group.by = "scCATCH", pt.size = 1,label = TRUE) + ggtitle("Cell Type Annotations, software: scCATCH") + NoLegend()
+DimPlot(dors2, group.by = "scCATCH", pt.size = 1,label = TRUE) + ggtitle("Stage 24 res 4, software: scCATCH") + NoLegend()
 
-#we have scCatch clusters
+
+#we have scCatch clusters. Save 'em
+
+scCatch_clusters = dors2@meta.data %>%
+  select(seurat_clusters, scCATCH) %>%
+  distinct()
+
+
+write_xlsx(scCatch_clusters,"scCatchs24_res4.xlsx")
+saveRDS(dors2,"dors24_annot.rds")
 #try subdividing the clusters further
 
 #use 
@@ -259,20 +277,23 @@ dorsclust = clustree(dors)
 
 table(dors$RNA_snn_res.2)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.2.6", pt.size = 1) + ggtitle("UMAP Plot at resolution 2.6")
+        group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot at resolution 0.5")
 
 
 
 ########################
 #count the number of cells in each cluster
 ##########################
-dors$seurat_clusters = dors$RNA_snn_res.2.4
+
+
+
+dors$seurat_clusters = dors$RNA_snn_res.1.3
 table(Idents(dors))
-Idents(dors) = dors$RNA_snn_res.2.4
+Idents(dors) = dors$RNA_snn_res.1.3
 table(Idents(dors))
 
 
-ncol(dors)
+
 
 
 dors2 = autoAnnoTools(dors, 
@@ -284,7 +305,7 @@ dors2 = autoAnnoTools(dors,
 
 DimPlot(dors2, group.by = "scCATCH", repel = TRUE, pt.size = 1,label = TRUE
     ) + 
-  ggtitle("Cell Type Annotations, software: scCATCH, res:2") + NoLegend()
+  ggtitle("Cell Type Annotations, software: scCATCH, res:1.3") + NoLegend()
 
 
 #print the scCatch annotations
