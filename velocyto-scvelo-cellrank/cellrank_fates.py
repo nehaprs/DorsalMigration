@@ -5,10 +5,13 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-IN_ADATA = Path("/home/neha/dorsalmigration/velocity/velocity/results/adata_velocity_dynamical.h5ad")
-OUT_ADATA = Path("/home/neha/dorsalmigration/velocity/velocity/results/adata_velocity_cellrank.h5ad")
+#import multiprocessing as mp
+#mp.set_start_method("spawn", force=True)
 
-FIGDIR = Path("/home/neha/dorsalmigration/velocity/velocity/results/figures")
+IN_ADATA = Path("/home/neha/dorsalmigration/velocity/velocity/results/sam/adata_scvelo_computed.h5ad")
+OUT_ADATA = Path("/home/neha/dorsalmigration/velocity/velocity/results/sam/adatasam_velocity_cellrank.h5ad")
+
+FIGDIR = Path("/home/neha/dorsalmigration/velocity/velocity/results/sam")
 
 adata = sc.read_h5ad(IN_ADATA)
 print("loaded files")
@@ -17,7 +20,8 @@ print("loaded files")
 cluster_key = "orig_cluster"
 
 #build cellrank kernel from velocity
-vk = cr.kernels.VelocityKernel(adata).compute_transition_matrix()
+vk = cr.kernels.VelocityKernel(adata).compute_transition_matrix(n_jobs=1, 
+backend="threading",show_progress_bar=False,)
 
 print("velocity kernel built")
 
@@ -93,7 +97,7 @@ summary = summary.sort_values("mean_fate_prob_stage1_interest", ascending=False)
 
 print("created summary dataframe of fates")
 
-summary.to_csv("/home/neha/dorsalmigration/velocity/velocity/results/stage17_dm_fate_summary.csv",
+summary.to_csv("/home/neha/dorsalmigration/velocity/velocity/results/sam/stage17_dm_fate_summary.csv",
                 index=False)
 
 #compute cluster-level fate mapping
@@ -108,7 +112,7 @@ print(clust_summary.shape)
 print(clust_summary.index)
 print(clust_summary.columns)
 
-clust_summary.to_csv("/home/neha/dorsalmigration/velocity/velocity/results/stage17_cluster_to_terminalstates.csv")
+clust_summary.to_csv("/home/neha/dorsalmigration/velocity/velocity/results/sam/stage17_cluster_to_terminalstates.csv")
 
 adata.write(OUT_ADATA)
 print("Wrote:", OUT_ADATA)

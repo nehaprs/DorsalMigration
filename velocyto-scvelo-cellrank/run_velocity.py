@@ -18,7 +18,7 @@ LOOM_S1 = ROOT.parent /"stage17" / "data" / "cellranger" / "velocyto" \
 LOOM_S2 = ROOT.parent /"stage19" / "data" / "cellranger" / "velocyto" \
           / "stage19.loom"
 
-OUT_ADATA = ROOT / "results" / "adata_with_velocity.h5ad"
+OUT_ADATA = ROOT / "results" / "adatasam_with_velocity.h5ad"
 
 ROOT.joinpath("results").mkdir(parents=True, exist_ok=True)
 
@@ -116,6 +116,7 @@ ldata = ldata[common].copy()
 print((adata.obs_names == ldata.obs_names).all()) #should return True
 print("ldata layers:", ldata.layers.keys())
 #bring spliced/unspliced layer to integrated data
+'''
 for layer in ["spliced", "unspliced", "ambiguous"]:
     if layer in ldata.layers:
         adata.layers[layer] = ldata.layers[layer]
@@ -125,8 +126,9 @@ for layer in ["spliced", "unspliced", "ambiguous"]:
 print("spliced and unspliced brought in")
 print(adata)
 print("Layers:", list(adata.layers.keys()))
-
-adata.write(OUT_ADATA)
+'''
+adatasam = scv.utils.merge(adata, ldata)
+adatasam.write(OUT_ADATA)
 print(f"Saved: {OUT_ADATA}")
 
 

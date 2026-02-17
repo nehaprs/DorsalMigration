@@ -2,8 +2,8 @@
 #created 12.11.2025
 
 #12.11.2025 script: integration of stage 17 with 19 and monocle 
-
-
+#1.26.2026 : intergate 19 and 21. concatenation with merge()
+#1.27.2026 : intergate 21 and 24
 #=================================================
 
 library(dplyr)
@@ -22,24 +22,39 @@ library(SeuratObject)
 library(scAnnoX)
 
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s17-19")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s21-24")
 
-dorsals17 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/dorsals17.rds")
-dorsals19 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage19/seurat_output/dorsals19.rds")
+#dorsals17 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/dorsals17.rds")
+#dorsals19 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage19/seurat_output/dorsals19.rds")
+dorsals21 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage21/seurat_output/dors21_annot.rds")
+dorsals24 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage24/seurat_output/dors24_annot.rds")
 
-dorsals17 = RenameCells(dorsals17, add.cell.id = "s17")
-dorsals19 = RenameCells(dorsals19, add.cell.id = "s19")
 
-head(colnames(dorsals17))
+
+
+#dorsals17 = RenameCells(dorsals17, add.cell.id = "s17")
+#dorsals19 = RenameCells(dorsals19, add.cell.id = "s19")
+dorsals21 = RenameCells(dorsals21, add.cell.id = "s21")
+dorsals24 = RenameCells(dorsals24, add.cell.id = "s24")
+
+
+head(colnames(dorsals21))
 
 #set pre-integration cluster ids at desired resolution
-Idents(dorsals17) = dorsals17$RNA_snn_res.1.3
-dorsals17$cluster_orig = Idents(dorsals17)
+#Idents(dorsals17) = dorsals17$RNA_snn_res.1.3
+#dorsals17$cluster_orig = Idents(dorsals17)
 
-Idents(dorsals19) = dorsals19$RNA_snn_res.1.5
-dorsals19$cluster_orig = Idents(dorsals19)
+#Idents(dorsals19) = dorsals19$RNA_snn_res.1.5
+#dorsals19$cluster_orig = Idents(dorsals19)
 
-seu_list = list(dorsals17, dorsals19)
+
+Idents(dorsals21) = dorsals21$RNA_snn_res.2.6
+dorsals21$cluster_orig = Idents(dorsals21)
+
+Idents(dorsals24) = dorsals24$RNA_snn_res.3
+dorsals24$cluster_orig = Idents(dorsals24)
+
+seu_list = list(dorsals21, dorsals24)
 
 features = SelectIntegrationFeatures(seu_list, nfeatures = 3000)
 seu_list <- lapply(seu_list, \(x) ScaleData(x, features = features))
@@ -70,16 +85,16 @@ I2 = FindVariableFeatures(I2, nfeatures = 3000)
 I2 = ScaleData(I2)
 I2 = RunPCA(I2, npcs = 30)
 
-elbow = ElbowPlot(I2) #9
-I2 = FindNeighbors(I2, dims = 1:9)
-I2 = RunUMAP(I2, dims = 1:9)
+elbow = ElbowPlot(I2) #9 for 17-19 5 for 19-21
+I2 = FindNeighbors(I2, dims = 1:5)
+I2 = RunUMAP(I2, dims = 1:5)
 I2 = FindClusters(I2)
 
-DimPlot(I2, group.by = "batch")
+p=DimPlot(I2, group.by = "orig_cluster", label = TRUE, label.size = 3, repel = TRUE)+ NoLegend()
 
 
 FeaturePlot(I2, features = c("foxd3", "sox10", "zic2", "zic3") )
-saveRDS(I2,"mergdS17-19.rds")
+saveRDS(I2,"mergdS21-24.rds")
 
 
 
@@ -101,14 +116,14 @@ reducedDims(cds)$PCA  <- Embeddings(I2, "pca")
 cds = cluster_cells(cds, reduction_method = "UMAP")
 cds = learn_graph(cds, use_partition = TRUE)
 orig_cluster <- colData(cds)$orig_cluster
-root_cells = rownames(colData(cds))[colData(cds)$stage == "s17"]
+root_cells = rownames(colData(cds))[colData(cds)$stage == "s19"]
 cds <- order_cells(cds, root_cells = root_cells)
 
-plot_cells(cds, color_cells_by="orig_cluster",label_roots = TRUE,
+plot_cells(cds, color_cells_by="orig_cluster",label_roots = FALSE,
            label_leaves = FALSE, label_branch_points = FALSE)
 
 
-
+saveRDS(cds,"cds_S21-24.rds")
 
 
 
@@ -304,3 +319,4 @@ orig_cluster_table <- I2@meta.data[cells_s19_backtrace, ] %>%
 orig_cluster_table
 
 write_xlsx(orig_cluster_table,"orig_cluster_s19_backtrace-res2.9.xlsx")
+
