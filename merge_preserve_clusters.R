@@ -68,6 +68,13 @@ head(lab_vec)
 
 p = DimPlot(m, group.by = "orig_cluster") + NoLegend()
 
+DimPlot(`mergdS21-24`, group.by = "orig_cluster",
+        label = TRUE, pt.size = 0.8, repel = TRUE) + NoLegend()
+
+DimPlot(`mergdS21-24`, group.by = "orig_cluster",
+        cells.highlight = which(`mergdS21-24`$orig_cluster == "s24_4"),
+        cols.highlight = "red",
+        cols = "grey") + NoLegend()
 #look at s1_10
 
 
