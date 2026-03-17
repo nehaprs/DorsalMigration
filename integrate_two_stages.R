@@ -22,7 +22,7 @@ library(SeuratObject)
 library(scAnnoX)
 
 
-setwd("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s21-24")
+setwd("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s21-24/round2")
 
 #dorsals17 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/dorsals17.rds")
 #dorsals19 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage19/seurat_output/dorsals19.rds")
@@ -38,7 +38,7 @@ dorsals21 = RenameCells(dorsals21, add.cell.id = "s21")
 dorsals24 = RenameCells(dorsals24, add.cell.id = "s24")
 
 
-head(colnames(dorsals21))
+head(colnames(dorsals24))
 
 #set pre-integration cluster ids at desired resolution
 #Idents(dorsals17) = dorsals17$RNA_snn_res.1.3
@@ -51,7 +51,7 @@ head(colnames(dorsals21))
 Idents(dorsals21) = dorsals21$RNA_snn_res.2.6
 dorsals21$cluster_orig = Idents(dorsals21)
 
-Idents(dorsals24) = dorsals24$RNA_snn_res.3
+Idents(dorsals24) = dorsals24$RNA_snn_res.4
 dorsals24$cluster_orig = Idents(dorsals24)
 
 seu_list = list(dorsals21, dorsals24)
@@ -90,8 +90,8 @@ I2 = FindNeighbors(I2, dims = 1:5)
 I2 = RunUMAP(I2, dims = 1:5)
 I2 = FindClusters(I2)
 
-p=DimPlot(I2, group.by = "orig_cluster", label = TRUE, label.size = 3, repel = TRUE)+ NoLegend()
-
+p=DimPlot(I2, group.by = "orig_cluster", label = TRUE, label.size = 6, repel = TRUE)+ NoLegend()
+ggsave("umap21-24.png", plot = p, width = 10, height = 9, dpi = 300)
 
 FeaturePlot(I2, features = c("foxd3", "sox10", "zic2", "zic3") )
 saveRDS(I2,"mergdS21-24.rds")
