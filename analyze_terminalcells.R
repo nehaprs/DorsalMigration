@@ -24,6 +24,9 @@ df <- read_csv("s21-24/S21_16par_endpoint_summary.csv")
 df <- read_csv("s17-19/S17_15par_endpoint_summary.csv")
 colnames(df)
 
+
+
+df <- read_csv("s21-24/round2/S21_33res4_endpoint_summary.csv")
 df_sum = df %>% group_by(endpoint_orig_cluster) %>% summarise(total_counts = sum(count))
 
 # Bar plot
