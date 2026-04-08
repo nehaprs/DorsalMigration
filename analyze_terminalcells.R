@@ -26,7 +26,7 @@ colnames(df)
 
 
 
-df <- read_csv("s21-24/round2/S21_33res4_endpoint_summary.csv")
+df <- read_csv("s21-24/res4s24/S21_10res4_endpoint_summary.csv")
 df_sum = df %>% group_by(endpoint_orig_cluster) %>% summarise(total_counts = sum(count))
 
 # Bar plot
@@ -43,7 +43,7 @@ ggplot(df_sum, aes(x = endpoint_orig_cluster, y = total_counts)) +
 ##label top clusters only
 # Identify top 5 clusters
 top5_clusters <- df_sum %>%
-  slice_max(total_counts, n = 7, with_ties = FALSE) %>%
+  slice_max(total_counts, n = 10, with_ties = FALSE) %>%
   pull(endpoint_orig_cluster)
 
 # Bar plot with labels only for top 5 clusters
