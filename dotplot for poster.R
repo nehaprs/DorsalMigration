@@ -92,18 +92,32 @@ ggplot(plot_df, aes(x = gene, y = cluster)) +
 FeaturePlot(s24, features = c("foxd3", "sox10", "sox9", "zic1", "zic2", "zic3", "zic4"))
 
 
-dm_genes <- c("foxd3", "sox10", "sox9", "zic1", "zic2", "zic3", "zic4")
+dm_genes <- c("foxd3", "sox10", "sox9", "zic2", "zic3")
 pn_genes = c("isl1","isl2","ebf2","olfm1","pou4f4","tubb2b","runx3",
              "runx1","stmn2","cbfb","prph")
 
 FeaturePlot(s19, features = pn_genes)
-DotPlot(s17, features = pn_genes)
-
+p = DotPlot(s24, features = pn_genes, dot.scale = 5)
+p = p + 
+  theme(
+    axis.text.y = element_text(size = 10,angle = 45 ),
+    axis.text.x = element_text(size = 15,angle = 45, hjust = 1 )
+    #axis.title.y = element_text(size = 10)
+  )
 ########################################
+
 df17 <- read_excel("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/filt_markers/stage17_resolution_1.3.xlsx")
 df19 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage19/seurat_output/filt_markers/stage19_resolution_1.5.xlsx")
 df21 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage21/seurat_output/filt_markers/stage21_highUMI-resolution_2.6.xlsx")
 df24 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage24/seurat_output/filtmarkers_resolution_3.xlsx")
+
+#markers w/o filtering
+df17 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/markers/markers_resolution_1.3.xlsx")
+df19 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage19/seurat_output/markers_resolution_1.5.xlsx")
+df21 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage21/seurat_output/markers_resolution_2.6.xlsx")
+df24 <- read_excel("BINF/scrnaseq general/dorsal migration/full head/highUMI/stage24/seurat_output/markers_resolution_3.xlsx")
+
+
 
 library(dplyr)
 library(tidyr)
@@ -112,20 +126,30 @@ library(tidyr)
 # INPUTS
 # -----------------------------
 dm_genes <- c("foxd3", "sox10", "sox9", "zic1", "zic2", "zic3", "zic4")
-pn_genes = c("isl1","isl2","ebf2","olfm1","pou4f4","tubb2b","runx3",
-             "runx1","stmn2","cbfb","prph")
+pn_genes = c("isl1","isl2","ebf2","olfm1","pou4f4","tubb2b",
+             "stmn2","cbfb","prph")
 
 
 # clusters of interest
 cluster_map <- data.frame(
   dataset = c("df17", "df19","df21","df21","df21","df24","df24","df24"),
   cluster = c(15, 17,26,32,33,33,28,29),
-  row_name = c("17-15",  "19-17","21-26","21-32","21-33","24-33","24-28","24-29"),
+  row_name = c("st17-cl15",  "st19-cl17","st21-cl26","st21-cl32","st21-cl33","st24-cl33","st24-cl28","st24-cl29"),
+  stringsAsFactors = FALSE
+)
+
+
+# clusters of interest
+cluster_map <- data.frame(
+  dataset = c("df17", "df19"),
+  cluster = c(18,10),
+  row_name = c("st17-cl18",  "st19-cl10"),
   stringsAsFactors = FALSE
 )
 
 # put dfs in a list
 df_list <- list(df17 = df17, df19 = df19, df21= df21, df24=df24)
+df_list <- list(df17 = df17, df19 = df19)
 
 # -----------------------------
 # BUILD MATRIX
@@ -177,12 +201,12 @@ plot_df <- lapply(seq_len(nrow(cluster_map)), function(i) {
   
   # keep only requested cluster and genes
   sub_df <- df %>%
-    filter(cluster == clust, gene %in% pn_genes) %>%
+    filter(cluster == clust, gene %in% dm_genes) %>%
     select(gene, avg_log2FC) %>%
     distinct(gene, .keep_all = TRUE)
   
   # complete all genes; absent genes will have NA avg_log2FC
-  data.frame(gene = pn_genes, stringsAsFactors = FALSE) %>%
+  data.frame(gene = dm_genes, stringsAsFactors = FALSE) %>%
     left_join(sub_df, by = "gene") %>%
     mutate(row_name = row_lab)
   
@@ -191,7 +215,7 @@ plot_df <- lapply(seq_len(nrow(cluster_map)), function(i) {
 
 # order rows/columns
 plot_df$row_name <- factor(plot_df$row_name, levels = rev(cluster_map$row_name))
-plot_df$gene <- factor(plot_df$gene, levels = pn_genes)
+plot_df$gene <- factor(plot_df$gene, levels = dm_genes)
 
 # -----------------------------
 # HEATMAP
@@ -203,13 +227,27 @@ ggplot(plot_df, aes(x = gene, y = row_name, fill = avg_log2FC)) +
     mid = "white",
     high = "red",
     midpoint = 0,
-    na.value = "grey80",
-    name = "avg_log2FC"
+    na.value = "grey",
+    name = "avg_log2FC",
+    
   ) +
   theme_bw() +
-  labs(x = "Gene", y = "Cluster") +
+  labs(x = "", y = "") +
   theme(
     panel.grid = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    # tick labels
+    axis.text.x = element_text(size = 30, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 30),
+    axis.title.x = element_text(size = 30),
+    axis.title.y = element_text(size = 30)
+    #axis.text.x = element_text(angle = 45, hjust = 1)
   )
+
+
+###################################################
++ geom_tile(
+  data = data.frame(gene = NA, row_name = NA, avg_log2FC = NA),
+  aes(fill = avg_log2FC),
+  show.legend = TRUE
+)
 
