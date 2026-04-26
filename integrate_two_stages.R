@@ -60,11 +60,12 @@ features = SelectIntegrationFeatures(seu_list, nfeatures = 3000)
 seu_list <- lapply(seu_list, \(x) ScaleData(x, features = features))
 seu_list <- lapply(seu_list, \(x) RunPCA(x, features = features))
 
-I2=  merge(seu_list[[1]], seu_list[[2]])
+I2=  merge(seu_list[[1]], list(seu_list[[2]], seu_list[[3]], seu_list[[4]]))
 table(I2$orig.ident)
 
 #identify the batches
 cn <- Cells(I2)
+head(cn)
 last_char <- substring(cn, 1, 3)
 table(last_char)
 
@@ -85,12 +86,12 @@ I2 = FindVariableFeatures(I2, nfeatures = 3000)
 I2 = ScaleData(I2)
 I2 = RunPCA(I2, npcs = 30)
 
-elbow = ElbowPlot(I2) #9 for 17-19 5 for 19-21
-I2 = FindNeighbors(I2, dims = 1:5)
-I2 = RunUMAP(I2, dims = 1:5)
+elbow = ElbowPlot(I2) #9 for 17-19 5 for 19-21 and 21-24. 10 for all 4
+I2 = FindNeighbors(I2, dims = 1:10)
+I2 = RunUMAP(I2, dims = 1:10)
 I2 = FindClusters(I2)
 
-p=DimPlot(I2, group.by = "orig_cluster", label = TRUE, label.size = 6, repel = TRUE)+ NoLegend()
+p=DimPlot(I2, group.by = "orig_cluster", label = FALSE, label.size = 6, repel = TRUE)+ NoLegend()
 ggsave("umap21-24.png", plot = p, width = 10, height = 9, dpi = 300)
 
 FeaturePlot(I2, features = c("foxd3", "sox10", "zic2", "zic3") )
@@ -320,3 +321,14 @@ orig_cluster_table
 
 write_xlsx(orig_cluster_table,"orig_cluster_s19_backtrace-res2.9.xlsx")
 
+#############
+s17_19 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s17-19/mergdS17-19.rds")
+s19_21 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s19-21/mergdS19-21.rds")
+s21_24 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated/s21-24/round1/mergdS21-24.rds")
+
+
+
+p = DimPlot(s21_24, group.by = "orig_cluster", label = TRUE, label.size = 20, pt.size = 4,
+            repel = TRUE) + NoLegend() +ggtitle("Stage21 + Stage 24")
+
+ggsave("s21_24umap.png", plot = p, width = 35, height = 20, dpi = 300)

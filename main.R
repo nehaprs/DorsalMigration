@@ -279,7 +279,16 @@ table(dors$RNA_snn_res.2)
 DimPlot(dors, reduction = "umap", label = TRUE,
         group.by = "RNA_snn_res.0.5", pt.size = 1) + ggtitle("UMAP Plot at resolution 0.5")
 
+#############
+#bigger plots
+#############
 
+dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/dors17_annot.rds")
+
+p = DimPlot(dors, reduction = "umap", label = TRUE, label.size = 20, repel = TRUE,
+        group.by = "RNA_snn_res.3", pt.size = 2) + ggtitle("UMAP Plot at resolution 3")
+
+ggsave("s24umap_big_label.png", plot = p, width = 15, height = 10, dpi = 300)
 
 ########################
 #count the number of cells in each cluster
@@ -459,7 +468,7 @@ dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/st21/seurat_
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/st21/seurat_output/high_res")
 
 #use 
-resolution.range <- seq(from = 3.1, to = 4.5, by = 0.1)
+resolution.range <- seq(from = 2.1, to = 3, by = 0.1)
 
 # Loop over each resolution
 for (res in resolution.range) {
@@ -503,3 +512,6 @@ source("~/GitHub/DorsalMigration/functions/count_nc_clusters.R")
 make_input_counted("nc_Candidates_reshaped.xlsx")
 
 clustree(dors)
+
+#################3
+##is stage 17 and 19 on too low 

@@ -97,7 +97,7 @@ pn_genes = c("isl1","isl2","ebf2","olfm1","pou4f4","tubb2b","runx3",
              "runx1","stmn2","cbfb","prph")
 
 FeaturePlot(s19, features = pn_genes)
-p = DotPlot(s24, features = pn_genes, dot.scale = 5)
+p = DotPlot(s17, features = dm_genes, dot.scale = 5)
 p = p + 
   theme(
     axis.text.y = element_text(size = 10,angle = 45 ),
