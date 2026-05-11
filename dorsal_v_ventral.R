@@ -38,3 +38,13 @@ for (file in xlsx_file){
 }
 
 #
+
+xlsx_file = list.files(pattern = "\\.xlsx$")
+
+for (file in xlsx_file){
+  df = read_xlsx(file)
+  dff = df[df$avg_log2FC > 1,]
+  dfff = dff[dff$pct.1 - dff$pct.2 > 0.1,]
+  file_new = paste0("filt",file)
+  write_xlsx(dfff, file_new)
+}

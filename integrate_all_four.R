@@ -120,7 +120,8 @@ s19 = subset(I2, subset = stage == "s19")
 s21 = subset(I2, subset = stage == "s21")
 s24 = subset(I2, subset = stage == "s24")
 
-DimPlot(ss, group.by = "orig_cluster", label = TRUE,label.size = 5, repel = TRUE) + NoLegend() 
+ss= s21_s24
+p = DimPlot(ss, group.by = "orig_cluster", label = TRUE,label.size = 5, repel = TRUE) + NoLegend() 
 
 saveRDS(s17,"s17.rds")
 saveRDS(s19,"s19.rds")
