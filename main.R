@@ -163,6 +163,17 @@ for (file in xlsx_file){
   write_xlsx(dfff, file_new)
 }
 
+
+for (file in xlsx_file){
+  df = read_xlsx(file)
+  dff = df[df$avg_log2FC > 1,]
+  dff = dff[dff$p_val_adj < 0.05,]
+  dff = dff[dff$pct.1 - dff$pct.2 > 0.01,]
+  file_new = paste0("filt",file)
+  write_xlsx(dff, file_new)
+}
+
+
 dorsclust = clustree(dors)
 
 

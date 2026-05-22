@@ -95,15 +95,22 @@ FeaturePlot(s24, features = c("foxd3", "sox10", "sox9", "zic1", "zic2", "zic3", 
 dm_genes <- c("foxd3", "sox10", "sox9", "zic2", "zic3")
 pn_genes = c("isl1","isl2","ebf2","olfm1","pou4f4","tubb2b","runx3",
              "runx1","stmn2","cbfb","prph")
+dm_genes <- c("foxd3", "sox10", "sox9","tfap2b", "tfap2a","tfap2c","tfap2e",
+              "snai1","snai2","sox8","twist1","adam33","mmp14","cdh2","itga5","mafb",
+              "msx1",
+              "zic2", "zic3")
+#FeaturePlot(s19, features = pn_genes)
+Idents(s19) = s19$RNA_snn_res.3
 
-FeaturePlot(s19, features = pn_genes)
-p = DotPlot(s17, features = dm_genes, dot.scale = 5)
+p = DotPlot(s19, features = dm_genes, dot.scale = 5)
 p = p + 
   theme(
     axis.text.y = element_text(size = 10,angle = 45 ),
     axis.text.x = element_text(size = 15,angle = 45, hjust = 1 )
     #axis.title.y = element_text(size = 10)
-  )
+  ) + ggtitle("stage 19 at resolution 3")
+
+ggsave("st19res3.png",p, width = 13, height = 8)
 ########################################
 
 df17 <- read_excel("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/filt_markers/stage17_resolution_1.3.xlsx")

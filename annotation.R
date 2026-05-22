@@ -1,10 +1,24 @@
 
 #################
 #annotate the existing object
+#may 2026: annotate with 2024 paper
 #################
+library(clustifyr)
+library(dplyr)
+library(Seurat)
+library(writexl)
+library(readxl)
+library(tibble)
+library(tidyr)
+library(readxl)
+library(dplyr)
+
+
+
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/version4/no CCScoring/annotation")
 library(GPTCelltype)
-library(write)
+
+
 dors = dorsal
 rm(dorsal)
 
@@ -109,3 +123,9 @@ predictions <- TransferData(anchorset = anchors, refdata = Idents(ref), dims = 1
 
 # Add predictions to query
 query <- AddMetaData(query, metadata = predictions)
+
+
+####################
+#annotate with 2024 paper
+####################
+
