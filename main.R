@@ -179,7 +179,7 @@ dorsclust = clustree(dors)
 
 dors = RunUMAP(dors, dims = 1:12)
 DimPlot(dors, reduction = "umap", label = TRUE,
-        group.by = "RNA_snn_res.4.1", pt.size = 1) + ggtitle("UMAP Plot, res:4.1")
+        group.by = "RNA_snn_res.2.3", pt.size = 1) + ggtitle("Stage 19, res:2.3")
 #redo after properly analyzing clusters based on markers
 #choose res 0.5 for subclustering
 

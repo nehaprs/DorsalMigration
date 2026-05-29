@@ -100,8 +100,8 @@ dm_genes <- c("foxd3", "sox10", "sox9","tfap2b", "tfap2a","tfap2c","tfap2e",
               "msx1",
               "zic2", "zic3")
 #FeaturePlot(s19, features = pn_genes)
-Idents(s19) = s19$RNA_snn_res.3
-
+Idents(s19) = s19$RNA_snn_res.2.3
+table(Idents(s19))
 p = DotPlot(s19, features = dm_genes, dot.scale = 5)
 p = p + 
   theme(
@@ -252,9 +252,21 @@ ggplot(plot_df, aes(x = gene, y = row_name, fill = avg_log2FC)) +
 
 
 ###################################################
-+ geom_tile(
-  data = data.frame(gene = NA, row_name = NA, avg_log2FC = NA),
-  aes(fill = avg_log2FC),
-  show.legend = TRUE
-)
+Idents(s17) = s19$RNA_snn_res.2.2
+table(Idents(s17))
+
+genes =  c("sox2", "nes", "MYOD1", "myf6","ereg", "epcam", "cdh1",
+           "snai1", "snai2", "twist1", "sox9", "sox10", "tfap2a", "tfap2b",
+           "pax3", "msx1", "zic2", "zic3",
+           "gata4", "sox17a")         
+  
+p = DotPlot(s17, features = genes,
+            idents = c(3,8,9,10,20,35),
+            dot.scale = 5)
+p = p + 
+  theme(
+    axis.text.y = element_text(size = 10,angle = 45 ),
+    axis.text.x = element_text(size = 15,angle = 45, hjust = 1 )
+    #axis.title.y = element_text(size = 10)
+  ) + ggtitle("")
 

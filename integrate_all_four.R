@@ -137,3 +137,10 @@ s21_s24 = subset(I2, subset = stage %in% c("s21", "s24"))
 saveRDS(s17_s19,"s17_s19.rds")
 saveRDS(s19_s21, "s19_s21.rds")
 saveRDS(s21_s24,"s21_s24.rds")
+
+####
+#foxd3 vln
+########
+
+
+VlnPlot(dorsals19, features = "foxd3" )
