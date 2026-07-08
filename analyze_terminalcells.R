@@ -1,9 +1,8 @@
 
 #barplot
 
-library(dplyr)
-library(ggplot2)
-library(readr)
+
+
 
 setwd("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/integrated")
 

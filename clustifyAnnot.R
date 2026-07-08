@@ -7,7 +7,7 @@ library(readxl)
 library(tibble)
 library(tidyr)
 library(readxl)
-library(dplyr)
+
 
 
 dors <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/stage17-res22.rds")

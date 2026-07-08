@@ -252,21 +252,46 @@ ggplot(plot_df, aes(x = gene, y = row_name, fill = avg_log2FC)) +
 
 
 ###################################################
-Idents(s17) = s19$RNA_snn_res.2.2
-table(Idents(s17))
 
-genes =  c("sox2", "nes", "MYOD1", "myf6","ereg", "epcam", "cdh1",
-           "snai1", "snai2", "twist1", "sox9", "sox10", "tfap2a", "tfap2b",
-           "pax3", "msx1", "zic2", "zic3",
-           "gata4", "sox17a")         
+s17 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage17/seurat_output/stage17-res22.rds")
+s19 <- readRDS("~/BINF/scrnaseq general/dorsal migration/full head/highUMI/stage19/seurat_output/stage19-res23.rds")
+
+
+Idents(s19) = s19$RNA_snn_res.2.3
+table(Idents(s19))
+
+dm_genes =  c("sox2","sox3", "nes",  "epcam", "cdh1",
+           "snai1", "snai2", "foxd3", "twist1", "sox9", "sox10", "tfap2a", "tfap2b",
+           "adam33"," mmp14", "pax3", "msx1", "zic2", "zic3")  
+
+dm_genes1 =  c("tfap2a", "tfap2b","sox9", "sox10", "snai1", "snai2",
+               "twist1", "pax3", "msx1","zic1", "zic2", "zic3") 
+
+
+
+pn_genes = c("isl1", "isl2", "prph","calca", "tac1", "trpv1", "ret", "ngfr", "ntrk1", "ntrk2", "ntrk3", 
+             "nefl", "nefm", "nefh",  "mbp", "pvalb", "slc17a7", "chat", "onecut1", "onecut2", "mnx1")
+
+
+wnt_genes = c("wnt1", "wnt3a", "wnt8a", "wnt8b", "wnt2b", "wnt4", "wnt5b", "wnt7a", "wnt7c", 
+              "wnt9a", "wnt9b", "wnt10b", "wnt11", "wnt11b" )
+
+epi_genes = c("mcidas" ,  "myb", "foxj1",
+              "ccno", "deup1",  "cep152",
+              "tuba1a",  "tekt2",  "dynlrb2", "dnah5", "dnah9"
+)
+epi2 =  c( "foxj1", "deup1")
+
   
-p = DotPlot(s17, features = genes,
-            idents = c(3,8,9,10,20,35),
+p = DotPlot(s24, features = epi2,
+            #idents = c(3,9,10,20),
             dot.scale = 5)
 p = p + 
   theme(
-    axis.text.y = element_text(size = 10,angle = 45 ),
-    axis.text.x = element_text(size = 15,angle = 45, hjust = 1 )
+    axis.text.y = element_text(size = 15,angle = 45 ),
+    axis.text.x = element_text(size = 20,angle = 45, hjust = 1 )
     #axis.title.y = element_text(size = 10)
-  ) + ggtitle("")
+  ) + ggtitle("Stage 24: ciliated epidermal progenitor markers")
 
+############
+table(Idents(s17))
